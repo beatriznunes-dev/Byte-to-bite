@@ -1,0 +1,138 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  ENTREGADOR
+  USER
+}
+
+enum StatusPedido {
+  EM_PREPARO
+  A_CAMINHO
+  ENTREGUE
+  CANCELADO
+}
+
+enum MetodoPagamento {
+  PIX
+  CARTAO
+  DINHEIRO
+}
+
+model Usuario {
+  id       String  @id @default(uuid())
+  nome     String
+  email    String  @unique
+  senha    String
+  telefone String?
+
+  role Role @default(USER)
+
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
+
+  enderecos   Endereco[]
+  pedidos     Pedido[]
+  resetSenhas ResetSenha[]
+}
+
+model ResetSenha {
+  id     Int    @id @default(autoincrement())
+  userId String
+
+  codigo String
+  usado  Boolean @default(false)
+
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user Usuario @relation(fields: [userId], references: [id])
+}
+
+model Endereco {
+  id     Int    @id @default(autoincrement())
+  userId String
+
+  rua          String
+  bairro       String
+  cidade       String
+  numeroDaCasa String
+  createdAt    DateTime  @default(now())
+  deletedAt    DateTime?
+
+  user    Usuario  @relation(fields: [userId], references: [id])
+  pedidos Pedido[]
+}
+
+model Produto {
+  id        Int    @id @default(autoincrement())
+  nome      String
+  descricao String
+
+  preco    Decimal
+  promocao Decimal?
+
+  estoque   Int
+  imagemUrl String?
+
+  tempoProducao Int
+
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
+
+  ingredientes Ingrediente[]
+  itemPedidos  ItemPedido[]
+}
+
+model Ingrediente {
+  id      Int    @id @default(autoincrement())
+  nome    String
+  estoque Int
+
+  createdAt DateTime @default(now())
+
+  produtos Produto[]
+}
+
+model Pedido {
+  id         String @id @default(uuid())
+  userId     String
+  enderecoId Int
+
+  precoTotal Decimal
+
+  status    StatusPedido    @default(EM_PREPARO)
+  pagamento MetodoPagamento
+
+  createdAt DateTime @default(now())
+
+  user     Usuario  @relation(fields: [userId], references: [id])
+  endereco Endereco @relation(fields: [enderecoId], references: [id])
+
+  item ItemPedido[]
+}
+
+model ItemPedido {
+  id Int @id @default(autoincrement())
+
+  pedioId   String
+  produtoId Int
+
+  precoDaUnidade Decimal
+  quantidade     Int
+
+  pedido  Pedido  @relation(fields: [pedioId], references: [id])
+  produto Produto @relation(fields: [produtoId], references: [id])
+}
