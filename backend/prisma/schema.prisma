@@ -15,7 +15,7 @@ datasource db {
 enum Role {
   ADMIN
   ENTREGADOR
-  USER
+  USUARIO
 }
 
 enum StatusPedido {
@@ -38,7 +38,7 @@ model Usuario {
   senha    String
   telefone String?
 
-  role Role @default(USER)
+  role Role @default(USUARIO)
 
   createdAt DateTime  @default(now())
   deletedAt DateTime?
