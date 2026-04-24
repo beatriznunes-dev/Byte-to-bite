@@ -1,6 +1,6 @@
 import { UsuarioRepository } from "../../repositories/usuario.repository.js";
 
-export class GetUserService {
+export class GetUsuarioService {
     private usuarioRepository = new UsuarioRepository();
 
     async executar(usuarioId: string){
