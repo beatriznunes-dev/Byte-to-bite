@@ -15,6 +15,10 @@ export class UsuarioRepository {
         })
     }
 
+    async getAll(){
+        return prisma.usuario.findMany()
+    }
+
     async create (data:{
         nome:string,
         email:string,

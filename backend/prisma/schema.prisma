@@ -50,7 +50,7 @@ model Usuario {
 
 model ResetSenha {
   id     Int    @id @default(autoincrement())
-  userId String
+  usuarioId String
 
   codigo String
   usado  Boolean @default(false)
@@ -58,12 +58,12 @@ model ResetSenha {
   expiresAt DateTime
   createdAt DateTime @default(now())
 
-  user Usuario @relation(fields: [userId], references: [id])
+  user Usuario @relation(fields: [usuarioId], references: [id])
 }
 
 model Endereco {
-  id     Int    @id @default(autoincrement())
-  userId String
+  id     String    @id @default(uuid())
+  usuarioId String
 
   rua          String
   bairro       String
@@ -72,7 +72,7 @@ model Endereco {
   createdAt    DateTime  @default(now())
   deletedAt    DateTime?
 
-  user    Usuario  @relation(fields: [userId], references: [id])
+  usuario    Usuario  @relation(fields: [usuarioId], references: [id])
   pedidos Pedido[]
 }
 
@@ -108,8 +108,8 @@ model Ingrediente {
 
 model Pedido {
   id         String @id @default(uuid())
-  userId     String
-  enderecoId Int
+  usuarioId     String
+  enderecoId String
 
   precoTotal Decimal
 
@@ -118,8 +118,9 @@ model Pedido {
 
   createdAt DateTime @default(now())
 
-  user     Usuario  @relation(fields: [userId], references: [id])
-  endereco Endereco @relation(fields: [enderecoId], references: [id])
+  usuario     Usuario  @relation(fields: [usuarioId], references: [id])
+
+  endereco   Endereco @relation(fields: [enderecoId], references: [id])
 
   item ItemPedido[]
 }
