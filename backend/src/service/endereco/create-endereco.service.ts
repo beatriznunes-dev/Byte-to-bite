@@ -9,7 +9,7 @@ interface EnderecoDTO{
     numeroDaCasa: string
 }
 
-export class EnderecoService{
+export class CreateEnderecoServiceService{
     private enderecoRepository = new EnderecoRepository()
     private usuarioRepository = new UsuarioRepository()
 
