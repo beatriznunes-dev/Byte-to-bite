@@ -92,7 +92,7 @@ model Produto {
   createdAt DateTime  @default(now())
   deletedAt DateTime?
 
-  ingredientes Ingrediente[]
+  ingredientes ProdutoIngrediente[]
   itemPedidos  ItemPedido[]
 }
 
@@ -103,7 +103,18 @@ model Ingrediente {
 
   createdAt DateTime @default(now())
 
-  produtos Produto[]
+  produtos ProdutoIngrediente[]
+}
+
+model ProdutoIngrediente {
+  produtoId     Int
+  ingredienteId Int
+  quantidade    Int
+
+  produto     Produto     @relation(fields: [produtoId], references: [id])
+  ingrediente Ingrediente @relation(fields: [ingredienteId], references: [id])
+
+  @@id([produtoId, ingredienteId])
 }
 
 model Pedido {
@@ -114,7 +125,7 @@ model Pedido {
   precoTotal Decimal
 
   status    StatusPedido    @default(EM_PREPARO)
-  pagamento MetodoPagamento
+  pagamento MetodoPagamento?
 
   createdAt DateTime @default(now())
 
