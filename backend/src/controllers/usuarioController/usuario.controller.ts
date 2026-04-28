@@ -5,20 +5,20 @@ import { UpdateUsuarioService } from "../../service/usuario/update-user.service.
 import { DeleteUsuarioService } from "../../service/usuario/delete-user.service.js"
 
 export class UsuarioController{
-    async create(request:FastifyRequest, reply: FastifyReply){
-        const {nome, email, senha, telefone} = request.body as {
-            nome: string,
-            email: string,
-            senha:string,
-            telefone?: string
-        }
+    async create(request: FastifyRequest, reply: FastifyReply) {
+    const { nome, email, senha, telefone, role } = request.body as {
+      nome: string;
+      email: string;
+      senha: string;
+      telefone?: string;
+      role: "USUARIO" | "ENTREGADOR"; 
+    };
 
-        const serviceCreate = new CreateUsuarioService()
-        const usuario = await serviceCreate.executar({nome, email, senha, telefone})
+    const service = new CreateUsuarioService();
+    const usuario = await service.executar({ nome, email, senha, ...(telefone && { telefone }), role });
 
-        return reply.status(201).send(usuario)
-
-    }
+    return reply.status(201).send(usuario);
+  }
 
     async get(request:FastifyRequest, reply:FastifyReply){
         const {id} = request.params as {id: string}
