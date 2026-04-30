@@ -2,11 +2,11 @@ import { PedidoRepository } from "../../repositories/pedido.respository.js";
 import { UsuarioRepository } from "../../repositories/usuario.repository.js";
 import { EnderecoRepository } from "../../repositories/endereco.repository.js";
 import { ProdutoRepository } from "../../repositories/produto.repository.js";
-import { MetodoPagamento } from "../../generated/prisma/enums.js";
 
 interface CreatePedidoDTO {
   usuarioId: string;
   enderecoId: string;
+  imagemUrl?: string;
   itens: { produtoId: number; quantidade: number }[];
 }
 
@@ -35,10 +35,6 @@ export class CreatePedidoService {
 
       if (!produto) throw new Error(`Produto ${item.produtoId} não encontrado`);
 
-      if (produto.estoque < item.quantidade) {
-        throw new Error(`Estoque insuficiente para o produto ${produto.nome}`);
-      }
-
       const precoDaUnidade = Number(produto.promocao ?? produto.preco);
       precoTotal += precoDaUnidade * item.quantidade;
 
@@ -47,16 +43,13 @@ export class CreatePedidoService {
         quantidade: item.quantidade,
         precoDaUnidade,
       });
-
-      await this.produtoRepository.update(item.produtoId, {
-        estoque: produto.estoque - item.quantidade,
-      });
     }
 
     return this.pedidoRepository.create({
       usuarioId: data.usuarioId,
       enderecoId: data.enderecoId,
       precoTotal,
+      imagemUrl: data.imagemUrl,
       itens: itensComPreco,
     });
   }

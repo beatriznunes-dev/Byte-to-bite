@@ -3,11 +3,10 @@ import { hash } from "bcryptjs";
 import { Role } from "../../generated/prisma/client.js";
 
 interface CreateUsuarioDTO {
-    nome: string;
+  nome: string;
   email: string;
   senha: string;
   telefone?: string;
-  role: Extract<Role, "USUARIO" | "ENTREGADOR">;
 }
 
 export class CreateUsuarioService {
@@ -20,14 +19,13 @@ export class CreateUsuarioService {
       throw new Error("Email já cadastrado");
     }
 
-
     const hashSenha = await hash(data.senha, 12);
 
     const usuario = await this.userRepository.create({
       nome: data.nome,
       email: data.email,
       senha: hashSenha,
-      role: data.role,
+      role: Role.USUARIO,
       ...(data.telefone && { telefone: data.telefone }),
     });
 

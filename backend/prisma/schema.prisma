@@ -123,6 +123,7 @@ model Pedido {
   enderecoId String
 
   precoTotal Decimal
+  imagemUrl  String?
 
   status    StatusPedido    @default(EM_PREPARO)
   pagamento MetodoPagamento?
