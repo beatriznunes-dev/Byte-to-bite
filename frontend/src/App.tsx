@@ -4,9 +4,9 @@ import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { KitchenView } from './components/KitchenView';
 import { POSView } from './components/POSView';
-import { SalesView } from './components/SalesView';
+import { SalesView } from './features/sales/SalesView';
 import { StockView } from './components/StockView';
-import type { ViewType } from './types';
+import type { ViewType } from './types/types';
 
 export default function App() {
   const [currentView, setCurrentView] = useState<ViewType>('kds');

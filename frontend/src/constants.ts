@@ -1,4 +1,4 @@
-import type { Order, Product, StockItem } from './types.ts';
+import type { Order, Product, StockItem } from './types/types.ts';
 
 export const INITIAL_ORDERS: Order[] = [
   {
