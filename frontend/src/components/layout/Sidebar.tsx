@@ -1,4 +1,4 @@
-import type { ViewType } from '../types.ts';
+import type { ViewType } from '../../types/types';
 
 interface SidebarProps {
   currentView: ViewType;

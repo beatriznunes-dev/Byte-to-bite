@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Sidebar } from './components/Sidebar';
-import { Header } from './components/Header';
-import { KitchenView } from './components/KitchenView';
-import { POSView } from './components/POSView';
+import { Sidebar } from './components/layout/Sidebar';
+import { Header } from './components/layout/Header';
+import { KitchenView } from './features/kitchen/KitchenView';
+import { POSView } from './features/pos/POSView';
 import { SalesView } from './features/sales/SalesView';
-import { StockView } from './components/StockView';
+import { StockView } from './features/stock/StockView';
 import type { ViewType } from './types/types';
 
 export default function App() {

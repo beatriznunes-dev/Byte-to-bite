@@ -1,36 +1,38 @@
 import { motion } from 'motion/react';
-import type { Order } from '../types.ts';
-import { INITIAL_ORDERS } from '../constants.ts';
+import { useEffect, useState } from 'react';
+import { api } from '../../services/api';
+import type { Pedido } from '../../types/types';
 
 const STATUS_CONFIG = {
-  atrasado: { color: '#E53935', label: 'Atrasado', action: 'Prioridade Máxima' },
-  preparando: { color: '#FFA000', label: 'Em Preparo', action: 'Marcar como Pronto' },
-  pronto: { color: '#43A047', label: 'Pronto', action: 'Ver Detalhes' },
-  recebido: { color: '#90A4AE', label: 'Recebido', action: 'Iniciar Preparo' },
+  EM_PREPARO: { color: '#FFA000', label: 'Em Preparo', action: 'Marcar como Pronto' },
+  A_CAMINHO: { color: '#43A047', label: 'A Caminho', action: 'Ver Detalhes' },
+  ENTREGUE: { color: '#90A4AE', label: 'Entregue', action: 'Arquivar' },
+  CANCELADO: { color: '#E53935', label: 'Cancelado', action: 'Ver Motivo' },
 };
 
 export function KitchenView() {
+  const [orders, setOrders] = useState<Pedido[]>([]);
+
+  useEffect(() => {
+    // Busca pedidos ativos no backend
+    api.get('/pedidos').then(response => {
+      // Filtra apenas os que não foram entregues ou cancelados para a cozinha
+      const ativos = response.data.filter((p: Pedido) => p.status === 'EM_PREPARO');
+      setOrders(ativos);
+    });
+  }, []);
+
   return (
     <div className="p-stack-lg space-y-stack-lg">
       <div className="flex justify-between items-end">
         <div>
           <h1 className="text-3xl font-bold text-on-surface">Monitor de Produção</h1>
-          <p className="text-on-surface-variant font-medium">4 pedidos ativos no momento</p>
-        </div>
-        <div className="flex gap-stack-md">
-          <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white border border-on-surface/10 text-sm font-semibold hover:bg-surface-dim transition-all">
-            <span className="material-symbols-outlined text-sm">filter_list</span>
-            Filtrar
-          </button>
-          <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white border border-on-surface/10 text-sm font-semibold hover:bg-surface-dim transition-all">
-            <span className="material-symbols-outlined text-sm">sort</span>
-            Ordenar
-          </button>
+          <p className="text-on-surface-variant font-medium">{orders.length} pedidos em preparo</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-gutter">
-        {INITIAL_ORDERS.map((order, idx) => (
+        {orders.map((order, idx) => (
           <OrderCard key={order.id} order={order} index={idx} />
         ))}
       </div>
@@ -39,31 +41,27 @@ export function KitchenView() {
         <div className="flex gap-gutter">
           <div className="flex items-center gap-2">
             <span className="w-3 h-3 rounded-full bg-[#43A047]"></span>
-            <span className="text-xs font-semibold">Ticket Médio: 12min</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-[#E53935]"></span>
-            <span className="text-xs font-semibold">Alertas: 1</span>
+            <span className="text-xs font-semibold">Sistema Online</span>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <span className="material-symbols-outlined text-sm">update</span>
-          <span className="text-[10px] font-bold uppercase">Última atualização: Agora mesmo</span>
+          <span className="text-[10px] font-bold uppercase">Sincronizado com Banco de Dados</span>
         </div>
       </footer>
     </div>
   );
 }
 
-function OrderCard({ order, index }: { order: Order; index: number; key?: string }) {
-  const config = STATUS_CONFIG[order.status];
+function OrderCard({ order, index }: { order: Pedido; index: number }) {
+  const config = STATUS_CONFIG[order.status as keyof typeof STATUS_CONFIG] || STATUS_CONFIG.EM_PREPARO;
   
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1 }}
-      className={`bg-white rounded-xl overflow-hidden shadow-sm border border-on-surface/5 flex h-full min-h-85 ${order.status === 'pronto' ? 'opacity-80' : ''}`}
+      className="bg-white rounded-xl overflow-hidden shadow-sm border border-on-surface/5 flex h-full min-h-85"
     >
       <div className="w-2" style={{ backgroundColor: config.color }}></div>
       <div className="flex-1 flex flex-col p-stack-md">
@@ -72,48 +70,32 @@ function OrderCard({ order, index }: { order: Order; index: number; key?: string
             <span className="text-[10px] font-black uppercase tracking-widest mb-1 block" style={{ color: config.color }}>
               {config.label}
             </span>
-            <h4 className="text-xl font-black text-on-surface">#{order.id}</h4>
+            <h4 className="text-sm font-black text-on-surface-variant">ID: {order.id.slice(0,8)}</h4>
           </div>
           <div className="text-right">
-            <span className="font-display text-2xl font-black block" style={{ color: config.color }}>
+            <span className="font-display text-2xl font-black block text-primary">
               {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-            </span>
-            <span className="text-[10px] uppercase font-bold text-on-surface-variant">
-              {order.tableNumber ? `Mesa ${order.tableNumber}` : `Delivery #${order.deliveryId}`}
             </span>
           </div>
         </div>
 
         <div className="flex-1 py-stack-md border-t border-b border-on-surface/5 overflow-y-auto max-h-40">
           <ul className="space-y-stack-sm">
-            {order.items.map((item) => (
+            {order.item?.map((item) => (
               <li key={item.id} className="flex flex-col">
                 <div className="flex justify-between items-center text-sm font-medium">
                   <span className="text-on-surface">
-                    <strong className="text-primary font-black mr-2">{item.quantity}x</strong>
-                    {item.name}
+                    <strong className="text-primary font-black mr-2">{item.quantidade}x</strong>
+                    {item.produto?.nome || "Produto"}
                   </span>
                 </div>
-                {item.notes && (
-                  <span className="text-[11px] text-on-surface-variant italic font-medium ml-6">
-                    * {item.notes}
-                  </span>
-                )}
               </li>
             ))}
           </ul>
         </div>
 
         <div className="pt-stack-md mt-auto">
-          <button 
-            className={`w-full py-3 rounded-lg font-bold text-xs uppercase tracking-widest transition-all ${
-              order.status === 'atrasado' 
-                ? 'border-2 border-sidebar-bg text-sidebar-bg hover:bg-sidebar-bg hover:text-white'
-                : order.status === 'preparando'
-                ? 'bg-primary text-white hover:brightness-110 shadow-lg shadow-primary/20'
-                : 'border border-on-surface/20 text-on-surface-variant hover:bg-surface-container'
-            }`}
-          >
+          <button className="w-full py-3 bg-primary text-white rounded-lg font-bold text-xs uppercase tracking-widest hover:brightness-110 shadow-lg shadow-primary/20 transition-all">
             {config.action}
           </button>
         </div>

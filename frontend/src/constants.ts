@@ -1,6 +1,6 @@
-import type { Order, Product, StockItem } from './types/types.ts';
+/*import type { Produto, Ingrediente } from './types/types';
 
-export const INITIAL_ORDERS: Order[] = [
+export const INITIAL_ORDERS = [
   {
     id: '1040',
     tableNumber: '08',
@@ -43,7 +43,7 @@ export const INITIAL_ORDERS: Order[] = [
   },
 ];
 
-export const PRODUCTS: Product[] = [
+export const PRODUCTS: Produto[] = [
   {
     id: '1',
     name: 'Smash Burger Clássico',
@@ -79,7 +79,7 @@ export const PRODUCTS: Product[] = [
   },
 ];
 
-export const STOCK_ITEMS: StockItem[] = [
+export const STOCK_ITEMS: Ingrediente[] = [
   /*{
     id: '1',
     name: 'Pão de Brioche',
@@ -119,7 +119,7 @@ export const STOCK_ITEMS: StockItem[] = [
 
 
   // PADARIA E MASSAS
-  { id: '1', name: 'Pão de Brioche', status: 'normal', quantity: 42, unit: 'un', lastRestock: 'Hoje', icon: '' },
+  /* id: '1', name: 'Pão de Brioche', status: 'normal', quantity: 42, unit: 'un', lastRestock: 'Hoje', icon: '' },
   { id: '2', name: 'Massa de Pizza Artesanal', status: 'normal', quantity: 15, unit: 'kg', lastRestock: 'Ontem', icon: '' },
   
   // LATICÍNIOS
@@ -161,7 +161,7 @@ export const STOCK_ITEMS: StockItem[] = [
   
   // PADRÃO (TESTE DE ERRO)
   { id: '22', name: 'Embalagem Delivery G', status: 'normal', quantity: 200, unit: 'un', lastRestock: 'Hoje', icon: '' },
-];
+];*/
 
 
 

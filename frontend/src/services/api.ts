@@ -1,55 +1,42 @@
-export type Role = 'ADMIN' | 'ENTREGADOR' | 'USUARIO';
-export type StatusPedido = 'EM_PREPARO' | 'A_CAMINHO' | 'ENTREGUE' | 'CANCELADO';
-export type MetodoPagamento = 'PIX' | 'CARTAO' | 'DINHEIRO';
+import axios, { type AxiosInstance, type InternalAxiosRequestConfig, type AxiosResponse } from 'axios';
 
-export interface Usuario {
-  id: string;
-  nome: string;
-  email: string;
-  telefone?: string;
-  role: Role;
-}
+/**
+ * Configuração da Base URL:
+ */
+const API_URL = 'http://localhost:3333'; 
 
-export interface Ingrediente {
-  id: number;
-  nome: string;
-  estoque: number;
-}
+export const api: AxiosInstance = axios.create({
+  baseURL: API_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
 
-export interface Produto {
-  id: number;
-  nome: string;
-  descricao: string;
-  preco: number;
-  promocao?: number;
-  estoque: number;
-  imagemUrl?: string;
-  tempoProducao: number;
-  ingredientes?: ProdutoIngrediente[];
-}
+/**
+ * INTERCEPTOR DE REQUISIÇÃO
+ * Este código intercepta cada chamada à API e verifica se existe um token no localStorage.
+ */
+api.interceptors.request.use(
+  (config: InternalAxiosRequestConfig) => {
+    const token = localStorage.getItem('@ByteToBite:token');
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
-export interface ProdutoIngrediente {
-  produtoId: number;
-  ingredienteId: number;
-  quantidade: number;
-  ingrediente?: Ingrediente;
-}
-
-export interface Pedido {
-  id: string;
-  usuarioId: string;
-  enderecoId: string;
-  precoTotal: number;
-  status: StatusPedido;
-  pagamento: MetodoPagamento;
-  createdAt: string;
-  item: ItemPedido[];
-}
-
-export interface ItemPedido {
-  id: number;
-  produtoId: number;
-  quantidade: number;
-  precoDaUnidade: number;
-  produto?: Produto;
-}
+/**
+ * INTERCEPTOR DE RESPOSTA
+ * Caso o token expire ou seja inválido (Erro 401), podemos deslogar o usuário automaticamente.
+ */
+api.interceptors.response.use(
+  (response: AxiosResponse) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('@ByteToBite:token');
+    }
+    return Promise.reject(error);
+  }
+);
