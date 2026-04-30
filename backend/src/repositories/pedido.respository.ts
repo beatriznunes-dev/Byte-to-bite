@@ -1,27 +1,52 @@
 import { prisma } from "../lib/prisma.js";
-import { StatusPedido, MetodoPagamento } from "../generated/prisma/enums.js";
+import { StatusPedido } from "../generated/prisma/enums.js";
 
 export class PedidoRepository {
   async create(data: {
     usuarioId: string;
     enderecoId: string;
     precoTotal: number;
+    imagemUrl?: string;
     itens: { produtoId: number; quantidade: number; precoDaUnidade: number }[];
   }) {
     const { itens, ...pedidoData } = data;
 
-    return prisma.pedido.create({
-      data: {
-        ...pedidoData,
-        item: {
-          create: itens.map((i) => ({
-            produtoId: i.produtoId,
-            quantidade: i.quantidade,
-            precoDaUnidade: i.precoDaUnidade,
-          })),
+    return prisma.$transaction(async (tx) => {
+      for (const item of itens) {
+        const produto = await tx.produto.findUnique({
+          where: { id: item.produtoId },
+          select: { id: true, estoque: true, nome: true },
+        });
+
+        if (!produto) {
+          throw new Error(`Produto ${item.produtoId} não encontrado`);
+        }
+
+        if (produto.estoque < item.quantidade) {
+          throw new Error(
+            `Estoque insuficiente para "${produto.nome}". Disponível: ${produto.estoque}, solicitado: ${item.quantidade}`
+          );
+        }
+
+        await tx.produto.update({
+          where: { id: item.produtoId },
+          data: { estoque: { decrement: item.quantidade } },
+        });
+      }
+
+      return tx.pedido.create({
+        data: {
+          ...pedidoData,
+          item: {
+            create: itens.map((i) => ({
+              produtoId: i.produtoId,
+              quantidade: i.quantidade,
+              precoDaUnidade: i.precoDaUnidade,
+            })),
+          },
         },
-      },
-      include: { item: true },
+        include: { item: true },
+      });
     });
   }
 

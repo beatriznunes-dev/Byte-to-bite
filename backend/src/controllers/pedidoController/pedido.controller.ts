@@ -12,6 +12,7 @@ export class PedidoController {
     const { usuarioId, enderecoId, itens } = request.body as {
       usuarioId: string;
       enderecoId: string;
+      imagemUrl?: string;
       itens: { produtoId: number; quantidade: number }[];
     };
 
