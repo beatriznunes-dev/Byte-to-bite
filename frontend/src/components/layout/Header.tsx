@@ -30,7 +30,7 @@ export function Header({ currentView }: HeaderProps) {
     <>
       {/* OVERLAY DE LOGOUT */}
       {isExiting && (
-        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-white/80 backdrop-blur-md animate-in fade-in duration-500">
+        <div className="fixed inset-0 z-9999 flex flex-col items-center justify-center bg-white/80 backdrop-blur-md animate-in fade-in duration-500">
           <div className="flex items-center justify-center">
             {/* Spinner centralizado sem ícone bugado */}
             <div className="w-12 h-12 border-4 border-primary/10 border-t-primary rounded-full animate-spin"></div>
