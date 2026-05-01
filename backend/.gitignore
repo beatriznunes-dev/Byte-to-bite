@@ -1,5 +1,15 @@
-node_modules
-# Keep environment variables out of version control
-.env
+# Dependências
+node_modules/
 
-/src/generated/prisma
+# Variáveis de ambiente (Segurança!)
+.env
+.env.local
+
+# Build e Logs
+dist/
+build/
+npm-debug.log*
+yarn-error.log*
+
+# Banco de dados local 
+*.sqlite

@@ -19,14 +19,14 @@ export function POSView() {
     <div className="p-stack-lg space-y-stack-lg pb-24">
       <section>
         <div className="flex items-center justify-between mb-8">
-          <h2 className="text-2xl font-black text-on-surface">Cardápio Digital</h2>
+          <h2 className="text-2xl font-black text-on-surface">Lista de pedidos</h2>
           <span className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">
             {products.length} Itens sincronizados
           </span>
         </div>
 
         {loading ? (
-          <div className="text-center py-20 font-bold text-on-surface-variant">Carregando cardápio...</div>
+          <div className="text-center py-20 font-bold text-on-surface-variant">Carregando lista de pedidos...</div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-gutter">
             {products.map((product, idx) => (
@@ -43,7 +43,7 @@ export function POSView() {
             <div className="flex items-center gap-3">
               <span className="material-symbols-outlined text-3xl">shopping_cart</span>
               <div>
-                <p className="text-sm font-bold">Carrinho</p>
+                <p className="text-sm font-bold">Pedido</p>
                 <p className="text-[10px] text-sidebar-text font-bold uppercase">Selecione itens para iniciar</p>
               </div>
             </div>
