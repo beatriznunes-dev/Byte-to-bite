@@ -64,7 +64,7 @@ export function StockView() {
       }
       setIsModalOpen(false);
       loadStock(); 
-    } catch (error) {
+    } catch  {
       alert("Erro na operação.");
     }
   }
@@ -76,7 +76,7 @@ export function StockView() {
       setIsDeleteModalOpen(false);
       setItemToDelete(null);
       loadStock();
-    } catch (error) {
+    } catch  {
       alert("Erro ao excluir insumo.");
     }
   }
@@ -275,7 +275,13 @@ export function StockView() {
   );
 }
 
-function StatCard({ label, value, icon, color, isError }: any) {
+function StatCard({ label, value, icon, color, isError }: {
+  label: string;
+  value: string;
+  icon: string;
+  color: string;
+  isError?: boolean;
+}) {
   return (
     <div className="bg-white p-6 rounded-2xl shadow-sm border border-[#FFCCBC] flex items-center gap-6 hover:shadow-xl transition-all group">
       <div className={`w-16 h-16 rounded-2xl flex items-center justify-center`} style={{ backgroundColor: `${color}10` }}>
