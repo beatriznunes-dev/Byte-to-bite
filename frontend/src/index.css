@@ -58,3 +58,17 @@
 ::-webkit-scrollbar-thumb {
   @apply bg-on-surface/10 rounded-full hover:bg-on-surface/20;
 }
+
+/* Esconde o ícone de revelação de senha do Microsoft Edge e IE */
+input::-ms-reveal,
+input::-ms-clear {
+  display: none;
+}
+
+/* Esconde ícones de preenchimento automático e utilitários do Chrome/Safari */
+input::-webkit-contacts-auto-fill-button, 
+input::-webkit-credentials-auto-fill-button {
+  visibility: hidden;
+  display: none !important;
+  pointer-events: none;
+}
