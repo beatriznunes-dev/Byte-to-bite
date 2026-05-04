@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "seed": "tsx src/seed.ts",
+    "seed": "tsx src/seeders/seed.ts",
     "build": "tsc",
     "start": "node dist/server.js",
     "dev": "tsx watch src/server.ts"
@@ -32,5 +32,8 @@
     "ts-node-dev": "^2.0.0",
     "tsx": "^4.21.0",
     "typescript": "^6.0.2"
+  },
+  "prisma": {
+    "seed": "tsx src/seeders/seed.ts"
   }
 }

@@ -390,9 +390,9 @@ export type EnderecoMinOrderByAggregateInput = {
   deletedAt?: Prisma.SortOrder
 }
 
-export type EnderecoNullableScalarRelationFilter = {
-  is?: Prisma.EnderecoWhereInput | null
-  isNot?: Prisma.EnderecoWhereInput | null
+export type EnderecoScalarRelationFilter = {
+  is?: Prisma.EnderecoWhereInput
+  isNot?: Prisma.EnderecoWhereInput
 }
 
 export type EnderecoCreateNestedManyWithoutUsuarioInput = {
@@ -443,12 +443,10 @@ export type EnderecoCreateNestedOneWithoutPedidosInput = {
   connect?: Prisma.EnderecoWhereUniqueInput
 }
 
-export type EnderecoUpdateOneWithoutPedidosNestedInput = {
+export type EnderecoUpdateOneRequiredWithoutPedidosNestedInput = {
   create?: Prisma.XOR<Prisma.EnderecoCreateWithoutPedidosInput, Prisma.EnderecoUncheckedCreateWithoutPedidosInput>
   connectOrCreate?: Prisma.EnderecoCreateOrConnectWithoutPedidosInput
   upsert?: Prisma.EnderecoUpsertWithoutPedidosInput
-  disconnect?: Prisma.EnderecoWhereInput | boolean
-  delete?: Prisma.EnderecoWhereInput | boolean
   connect?: Prisma.EnderecoWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.EnderecoUpdateToOneWithWhereWithoutPedidosInput, Prisma.EnderecoUpdateWithoutPedidosInput>, Prisma.EnderecoUncheckedUpdateWithoutPedidosInput>
 }

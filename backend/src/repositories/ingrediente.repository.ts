@@ -1,31 +1,28 @@
-import {prisma} from "../lib/prisma.js"
+import { prisma } from "../lib/prisma.js";
 
-
-
-export class IngredienteRepository{
-    async create(data:{
-        nome:string,
-        estoque:number
-    }){
-        return prisma.ingrediente.create({data})
+export class IngredienteRepository {
+    async create(data: { nome: string, estoque: number }) {
+        return prisma.ingrediente.create({ data });
     }
 
-    async findAll(){
-        return prisma.ingrediente.findMany()
+    async findAll() {
+        return prisma.ingrediente.findMany({
+            orderBy: { nome: 'asc' }
+        });
     }
 
-    async findById(id:number){
-        return prisma.ingrediente.findUnique({where:{id}})
+    async findById(id: number) {
+        return prisma.ingrediente.findUnique({ where: { id } });
     }
 
-    async update(id: number, data: Partial<{
-        nome: string,
-        estoque: number
-    }>){
-        return prisma.ingrediente.update({where: {id}, data})
+    async update(id: number, data: Partial<{ nome: string, estoque: number }>) {
+        return prisma.ingrediente.update({
+            where: { id },
+            data
+        });
     }
 
-    async delete(id:number){
-        return prisma.ingrediente.delete({where: {id}})
+    async delete(id: number) {
+        return prisma.ingrediente.delete({ where: { id } });
     }
 }

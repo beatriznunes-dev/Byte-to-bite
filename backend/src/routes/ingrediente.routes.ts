@@ -5,6 +5,10 @@ import { adminMiddleware } from "../middlewares/auth.middleware.js";
 const controller = new IngredienteController();
 
 export async function ingredienteRoutes(app: FastifyInstance): Promise<void> {
+  // Rota de leitura (GET) - Aberta para consulta
+  app.get("/ingredientes", controller.list.bind(controller));
+
+  // Rota de criação (POST) - Protegida para Admin
   app.post(
     "/ingredientes",
     { preHandler: adminMiddleware },

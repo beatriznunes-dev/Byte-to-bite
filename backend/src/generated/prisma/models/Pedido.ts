@@ -38,8 +38,8 @@ export type PedidoMinAggregateOutputType = {
   id: string | null
   usuarioId: string | null
   enderecoId: string | null
-  retirada: string | null
   precoTotal: runtime.Decimal | null
+  imagemUrl: string | null
   status: $Enums.StatusPedido | null
   pagamento: $Enums.MetodoPagamento | null
   createdAt: Date | null
@@ -49,8 +49,8 @@ export type PedidoMaxAggregateOutputType = {
   id: string | null
   usuarioId: string | null
   enderecoId: string | null
-  retirada: string | null
   precoTotal: runtime.Decimal | null
+  imagemUrl: string | null
   status: $Enums.StatusPedido | null
   pagamento: $Enums.MetodoPagamento | null
   createdAt: Date | null
@@ -60,8 +60,8 @@ export type PedidoCountAggregateOutputType = {
   id: number
   usuarioId: number
   enderecoId: number
-  retirada: number
   precoTotal: number
+  imagemUrl: number
   status: number
   pagamento: number
   createdAt: number
@@ -81,8 +81,8 @@ export type PedidoMinAggregateInputType = {
   id?: true
   usuarioId?: true
   enderecoId?: true
-  retirada?: true
   precoTotal?: true
+  imagemUrl?: true
   status?: true
   pagamento?: true
   createdAt?: true
@@ -92,8 +92,8 @@ export type PedidoMaxAggregateInputType = {
   id?: true
   usuarioId?: true
   enderecoId?: true
-  retirada?: true
   precoTotal?: true
+  imagemUrl?: true
   status?: true
   pagamento?: true
   createdAt?: true
@@ -103,8 +103,8 @@ export type PedidoCountAggregateInputType = {
   id?: true
   usuarioId?: true
   enderecoId?: true
-  retirada?: true
   precoTotal?: true
+  imagemUrl?: true
   status?: true
   pagamento?: true
   createdAt?: true
@@ -200,9 +200,9 @@ export type PedidoGroupByArgs<ExtArgs extends runtime.Types.Extensions.InternalA
 export type PedidoGroupByOutputType = {
   id: string
   usuarioId: string
-  enderecoId: string | null
-  retirada: string
+  enderecoId: string
   precoTotal: runtime.Decimal
+  imagemUrl: string | null
   status: $Enums.StatusPedido
   pagamento: $Enums.MetodoPagamento | null
   createdAt: Date
@@ -234,23 +234,23 @@ export type PedidoWhereInput = {
   NOT?: Prisma.PedidoWhereInput | Prisma.PedidoWhereInput[]
   id?: Prisma.StringFilter<"Pedido"> | string
   usuarioId?: Prisma.StringFilter<"Pedido"> | string
-  enderecoId?: Prisma.StringNullableFilter<"Pedido"> | string | null
-  retirada?: Prisma.StringFilter<"Pedido"> | string
+  enderecoId?: Prisma.StringFilter<"Pedido"> | string
   precoTotal?: Prisma.DecimalFilter<"Pedido"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  imagemUrl?: Prisma.StringNullableFilter<"Pedido"> | string | null
   status?: Prisma.EnumStatusPedidoFilter<"Pedido"> | $Enums.StatusPedido
   pagamento?: Prisma.EnumMetodoPagamentoNullableFilter<"Pedido"> | $Enums.MetodoPagamento | null
   createdAt?: Prisma.DateTimeFilter<"Pedido"> | Date | string
   usuario?: Prisma.XOR<Prisma.UsuarioScalarRelationFilter, Prisma.UsuarioWhereInput>
-  endereco?: Prisma.XOR<Prisma.EnderecoNullableScalarRelationFilter, Prisma.EnderecoWhereInput> | null
+  endereco?: Prisma.XOR<Prisma.EnderecoScalarRelationFilter, Prisma.EnderecoWhereInput>
   item?: Prisma.ItemPedidoListRelationFilter
 }
 
 export type PedidoOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   usuarioId?: Prisma.SortOrder
-  enderecoId?: Prisma.SortOrderInput | Prisma.SortOrder
-  retirada?: Prisma.SortOrder
+  enderecoId?: Prisma.SortOrder
   precoTotal?: Prisma.SortOrder
+  imagemUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
   pagamento?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -265,23 +265,23 @@ export type PedidoWhereUniqueInput = Prisma.AtLeast<{
   OR?: Prisma.PedidoWhereInput[]
   NOT?: Prisma.PedidoWhereInput | Prisma.PedidoWhereInput[]
   usuarioId?: Prisma.StringFilter<"Pedido"> | string
-  enderecoId?: Prisma.StringNullableFilter<"Pedido"> | string | null
-  retirada?: Prisma.StringFilter<"Pedido"> | string
+  enderecoId?: Prisma.StringFilter<"Pedido"> | string
   precoTotal?: Prisma.DecimalFilter<"Pedido"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  imagemUrl?: Prisma.StringNullableFilter<"Pedido"> | string | null
   status?: Prisma.EnumStatusPedidoFilter<"Pedido"> | $Enums.StatusPedido
   pagamento?: Prisma.EnumMetodoPagamentoNullableFilter<"Pedido"> | $Enums.MetodoPagamento | null
   createdAt?: Prisma.DateTimeFilter<"Pedido"> | Date | string
   usuario?: Prisma.XOR<Prisma.UsuarioScalarRelationFilter, Prisma.UsuarioWhereInput>
-  endereco?: Prisma.XOR<Prisma.EnderecoNullableScalarRelationFilter, Prisma.EnderecoWhereInput> | null
+  endereco?: Prisma.XOR<Prisma.EnderecoScalarRelationFilter, Prisma.EnderecoWhereInput>
   item?: Prisma.ItemPedidoListRelationFilter
 }, "id">
 
 export type PedidoOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   usuarioId?: Prisma.SortOrder
-  enderecoId?: Prisma.SortOrderInput | Prisma.SortOrder
-  retirada?: Prisma.SortOrder
+  enderecoId?: Prisma.SortOrder
   precoTotal?: Prisma.SortOrder
+  imagemUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
   pagamento?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -298,9 +298,9 @@ export type PedidoScalarWhereWithAggregatesInput = {
   NOT?: Prisma.PedidoScalarWhereWithAggregatesInput | Prisma.PedidoScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"Pedido"> | string
   usuarioId?: Prisma.StringWithAggregatesFilter<"Pedido"> | string
-  enderecoId?: Prisma.StringNullableWithAggregatesFilter<"Pedido"> | string | null
-  retirada?: Prisma.StringWithAggregatesFilter<"Pedido"> | string
+  enderecoId?: Prisma.StringWithAggregatesFilter<"Pedido"> | string
   precoTotal?: Prisma.DecimalWithAggregatesFilter<"Pedido"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  imagemUrl?: Prisma.StringNullableWithAggregatesFilter<"Pedido"> | string | null
   status?: Prisma.EnumStatusPedidoWithAggregatesFilter<"Pedido"> | $Enums.StatusPedido
   pagamento?: Prisma.EnumMetodoPagamentoNullableWithAggregatesFilter<"Pedido"> | $Enums.MetodoPagamento | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Pedido"> | Date | string
@@ -308,22 +308,22 @@ export type PedidoScalarWhereWithAggregatesInput = {
 
 export type PedidoCreateInput = {
   id?: string
-  retirada: string
   precoTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  imagemUrl?: string | null
   status?: $Enums.StatusPedido
   pagamento?: $Enums.MetodoPagamento | null
   createdAt?: Date | string
   usuario: Prisma.UsuarioCreateNestedOneWithoutPedidosInput
-  endereco?: Prisma.EnderecoCreateNestedOneWithoutPedidosInput
+  endereco: Prisma.EnderecoCreateNestedOneWithoutPedidosInput
   item?: Prisma.ItemPedidoCreateNestedManyWithoutPedidoInput
 }
 
 export type PedidoUncheckedCreateInput = {
   id?: string
   usuarioId: string
-  enderecoId?: string | null
-  retirada: string
+  enderecoId: string
   precoTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  imagemUrl?: string | null
   status?: $Enums.StatusPedido
   pagamento?: $Enums.MetodoPagamento | null
   createdAt?: Date | string
@@ -332,22 +332,22 @@ export type PedidoUncheckedCreateInput = {
 
 export type PedidoUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  retirada?: Prisma.StringFieldUpdateOperationsInput | string
   precoTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  imagemUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumStatusPedidoFieldUpdateOperationsInput | $Enums.StatusPedido
   pagamento?: Prisma.NullableEnumMetodoPagamentoFieldUpdateOperationsInput | $Enums.MetodoPagamento | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   usuario?: Prisma.UsuarioUpdateOneRequiredWithoutPedidosNestedInput
-  endereco?: Prisma.EnderecoUpdateOneWithoutPedidosNestedInput
+  endereco?: Prisma.EnderecoUpdateOneRequiredWithoutPedidosNestedInput
   item?: Prisma.ItemPedidoUpdateManyWithoutPedidoNestedInput
 }
 
 export type PedidoUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   usuarioId?: Prisma.StringFieldUpdateOperationsInput | string
-  enderecoId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  retirada?: Prisma.StringFieldUpdateOperationsInput | string
+  enderecoId?: Prisma.StringFieldUpdateOperationsInput | string
   precoTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  imagemUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumStatusPedidoFieldUpdateOperationsInput | $Enums.StatusPedido
   pagamento?: Prisma.NullableEnumMetodoPagamentoFieldUpdateOperationsInput | $Enums.MetodoPagamento | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -357,9 +357,9 @@ export type PedidoUncheckedUpdateInput = {
 export type PedidoCreateManyInput = {
   id?: string
   usuarioId: string
-  enderecoId?: string | null
-  retirada: string
+  enderecoId: string
   precoTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  imagemUrl?: string | null
   status?: $Enums.StatusPedido
   pagamento?: $Enums.MetodoPagamento | null
   createdAt?: Date | string
@@ -367,8 +367,8 @@ export type PedidoCreateManyInput = {
 
 export type PedidoUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  retirada?: Prisma.StringFieldUpdateOperationsInput | string
   precoTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  imagemUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumStatusPedidoFieldUpdateOperationsInput | $Enums.StatusPedido
   pagamento?: Prisma.NullableEnumMetodoPagamentoFieldUpdateOperationsInput | $Enums.MetodoPagamento | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -377,9 +377,9 @@ export type PedidoUpdateManyMutationInput = {
 export type PedidoUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   usuarioId?: Prisma.StringFieldUpdateOperationsInput | string
-  enderecoId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  retirada?: Prisma.StringFieldUpdateOperationsInput | string
+  enderecoId?: Prisma.StringFieldUpdateOperationsInput | string
   precoTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  imagemUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumStatusPedidoFieldUpdateOperationsInput | $Enums.StatusPedido
   pagamento?: Prisma.NullableEnumMetodoPagamentoFieldUpdateOperationsInput | $Enums.MetodoPagamento | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -399,8 +399,8 @@ export type PedidoCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   usuarioId?: Prisma.SortOrder
   enderecoId?: Prisma.SortOrder
-  retirada?: Prisma.SortOrder
   precoTotal?: Prisma.SortOrder
+  imagemUrl?: Prisma.SortOrder
   status?: Prisma.SortOrder
   pagamento?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -414,8 +414,8 @@ export type PedidoMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   usuarioId?: Prisma.SortOrder
   enderecoId?: Prisma.SortOrder
-  retirada?: Prisma.SortOrder
   precoTotal?: Prisma.SortOrder
+  imagemUrl?: Prisma.SortOrder
   status?: Prisma.SortOrder
   pagamento?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -425,8 +425,8 @@ export type PedidoMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   usuarioId?: Prisma.SortOrder
   enderecoId?: Prisma.SortOrder
-  retirada?: Prisma.SortOrder
   precoTotal?: Prisma.SortOrder
+  imagemUrl?: Prisma.SortOrder
   status?: Prisma.SortOrder
   pagamento?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -549,20 +549,20 @@ export type PedidoUpdateOneRequiredWithoutItemNestedInput = {
 
 export type PedidoCreateWithoutUsuarioInput = {
   id?: string
-  retirada: string
   precoTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  imagemUrl?: string | null
   status?: $Enums.StatusPedido
   pagamento?: $Enums.MetodoPagamento | null
   createdAt?: Date | string
-  endereco?: Prisma.EnderecoCreateNestedOneWithoutPedidosInput
+  endereco: Prisma.EnderecoCreateNestedOneWithoutPedidosInput
   item?: Prisma.ItemPedidoCreateNestedManyWithoutPedidoInput
 }
 
 export type PedidoUncheckedCreateWithoutUsuarioInput = {
   id?: string
-  enderecoId?: string | null
-  retirada: string
+  enderecoId: string
   precoTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  imagemUrl?: string | null
   status?: $Enums.StatusPedido
   pagamento?: $Enums.MetodoPagamento | null
   createdAt?: Date | string
@@ -601,9 +601,9 @@ export type PedidoScalarWhereInput = {
   NOT?: Prisma.PedidoScalarWhereInput | Prisma.PedidoScalarWhereInput[]
   id?: Prisma.StringFilter<"Pedido"> | string
   usuarioId?: Prisma.StringFilter<"Pedido"> | string
-  enderecoId?: Prisma.StringNullableFilter<"Pedido"> | string | null
-  retirada?: Prisma.StringFilter<"Pedido"> | string
+  enderecoId?: Prisma.StringFilter<"Pedido"> | string
   precoTotal?: Prisma.DecimalFilter<"Pedido"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  imagemUrl?: Prisma.StringNullableFilter<"Pedido"> | string | null
   status?: Prisma.EnumStatusPedidoFilter<"Pedido"> | $Enums.StatusPedido
   pagamento?: Prisma.EnumMetodoPagamentoNullableFilter<"Pedido"> | $Enums.MetodoPagamento | null
   createdAt?: Prisma.DateTimeFilter<"Pedido"> | Date | string
@@ -611,8 +611,8 @@ export type PedidoScalarWhereInput = {
 
 export type PedidoCreateWithoutEnderecoInput = {
   id?: string
-  retirada: string
   precoTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  imagemUrl?: string | null
   status?: $Enums.StatusPedido
   pagamento?: $Enums.MetodoPagamento | null
   createdAt?: Date | string
@@ -623,8 +623,8 @@ export type PedidoCreateWithoutEnderecoInput = {
 export type PedidoUncheckedCreateWithoutEnderecoInput = {
   id?: string
   usuarioId: string
-  retirada: string
   precoTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  imagemUrl?: string | null
   status?: $Enums.StatusPedido
   pagamento?: $Enums.MetodoPagamento | null
   createdAt?: Date | string
@@ -659,21 +659,21 @@ export type PedidoUpdateManyWithWhereWithoutEnderecoInput = {
 
 export type PedidoCreateWithoutItemInput = {
   id?: string
-  retirada: string
   precoTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  imagemUrl?: string | null
   status?: $Enums.StatusPedido
   pagamento?: $Enums.MetodoPagamento | null
   createdAt?: Date | string
   usuario: Prisma.UsuarioCreateNestedOneWithoutPedidosInput
-  endereco?: Prisma.EnderecoCreateNestedOneWithoutPedidosInput
+  endereco: Prisma.EnderecoCreateNestedOneWithoutPedidosInput
 }
 
 export type PedidoUncheckedCreateWithoutItemInput = {
   id?: string
   usuarioId: string
-  enderecoId?: string | null
-  retirada: string
+  enderecoId: string
   precoTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  imagemUrl?: string | null
   status?: $Enums.StatusPedido
   pagamento?: $Enums.MetodoPagamento | null
   createdAt?: Date | string
@@ -697,21 +697,21 @@ export type PedidoUpdateToOneWithWhereWithoutItemInput = {
 
 export type PedidoUpdateWithoutItemInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  retirada?: Prisma.StringFieldUpdateOperationsInput | string
   precoTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  imagemUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumStatusPedidoFieldUpdateOperationsInput | $Enums.StatusPedido
   pagamento?: Prisma.NullableEnumMetodoPagamentoFieldUpdateOperationsInput | $Enums.MetodoPagamento | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   usuario?: Prisma.UsuarioUpdateOneRequiredWithoutPedidosNestedInput
-  endereco?: Prisma.EnderecoUpdateOneWithoutPedidosNestedInput
+  endereco?: Prisma.EnderecoUpdateOneRequiredWithoutPedidosNestedInput
 }
 
 export type PedidoUncheckedUpdateWithoutItemInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   usuarioId?: Prisma.StringFieldUpdateOperationsInput | string
-  enderecoId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  retirada?: Prisma.StringFieldUpdateOperationsInput | string
+  enderecoId?: Prisma.StringFieldUpdateOperationsInput | string
   precoTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  imagemUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumStatusPedidoFieldUpdateOperationsInput | $Enums.StatusPedido
   pagamento?: Prisma.NullableEnumMetodoPagamentoFieldUpdateOperationsInput | $Enums.MetodoPagamento | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -719,9 +719,9 @@ export type PedidoUncheckedUpdateWithoutItemInput = {
 
 export type PedidoCreateManyUsuarioInput = {
   id?: string
-  enderecoId?: string | null
-  retirada: string
+  enderecoId: string
   precoTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  imagemUrl?: string | null
   status?: $Enums.StatusPedido
   pagamento?: $Enums.MetodoPagamento | null
   createdAt?: Date | string
@@ -729,20 +729,20 @@ export type PedidoCreateManyUsuarioInput = {
 
 export type PedidoUpdateWithoutUsuarioInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  retirada?: Prisma.StringFieldUpdateOperationsInput | string
   precoTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  imagemUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumStatusPedidoFieldUpdateOperationsInput | $Enums.StatusPedido
   pagamento?: Prisma.NullableEnumMetodoPagamentoFieldUpdateOperationsInput | $Enums.MetodoPagamento | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  endereco?: Prisma.EnderecoUpdateOneWithoutPedidosNestedInput
+  endereco?: Prisma.EnderecoUpdateOneRequiredWithoutPedidosNestedInput
   item?: Prisma.ItemPedidoUpdateManyWithoutPedidoNestedInput
 }
 
 export type PedidoUncheckedUpdateWithoutUsuarioInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  enderecoId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  retirada?: Prisma.StringFieldUpdateOperationsInput | string
+  enderecoId?: Prisma.StringFieldUpdateOperationsInput | string
   precoTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  imagemUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumStatusPedidoFieldUpdateOperationsInput | $Enums.StatusPedido
   pagamento?: Prisma.NullableEnumMetodoPagamentoFieldUpdateOperationsInput | $Enums.MetodoPagamento | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -751,9 +751,9 @@ export type PedidoUncheckedUpdateWithoutUsuarioInput = {
 
 export type PedidoUncheckedUpdateManyWithoutUsuarioInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  enderecoId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  retirada?: Prisma.StringFieldUpdateOperationsInput | string
+  enderecoId?: Prisma.StringFieldUpdateOperationsInput | string
   precoTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  imagemUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumStatusPedidoFieldUpdateOperationsInput | $Enums.StatusPedido
   pagamento?: Prisma.NullableEnumMetodoPagamentoFieldUpdateOperationsInput | $Enums.MetodoPagamento | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -762,8 +762,8 @@ export type PedidoUncheckedUpdateManyWithoutUsuarioInput = {
 export type PedidoCreateManyEnderecoInput = {
   id?: string
   usuarioId: string
-  retirada: string
   precoTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  imagemUrl?: string | null
   status?: $Enums.StatusPedido
   pagamento?: $Enums.MetodoPagamento | null
   createdAt?: Date | string
@@ -771,8 +771,8 @@ export type PedidoCreateManyEnderecoInput = {
 
 export type PedidoUpdateWithoutEnderecoInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  retirada?: Prisma.StringFieldUpdateOperationsInput | string
   precoTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  imagemUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumStatusPedidoFieldUpdateOperationsInput | $Enums.StatusPedido
   pagamento?: Prisma.NullableEnumMetodoPagamentoFieldUpdateOperationsInput | $Enums.MetodoPagamento | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -783,8 +783,8 @@ export type PedidoUpdateWithoutEnderecoInput = {
 export type PedidoUncheckedUpdateWithoutEnderecoInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   usuarioId?: Prisma.StringFieldUpdateOperationsInput | string
-  retirada?: Prisma.StringFieldUpdateOperationsInput | string
   precoTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  imagemUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumStatusPedidoFieldUpdateOperationsInput | $Enums.StatusPedido
   pagamento?: Prisma.NullableEnumMetodoPagamentoFieldUpdateOperationsInput | $Enums.MetodoPagamento | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -794,8 +794,8 @@ export type PedidoUncheckedUpdateWithoutEnderecoInput = {
 export type PedidoUncheckedUpdateManyWithoutEnderecoInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   usuarioId?: Prisma.StringFieldUpdateOperationsInput | string
-  retirada?: Prisma.StringFieldUpdateOperationsInput | string
   precoTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  imagemUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumStatusPedidoFieldUpdateOperationsInput | $Enums.StatusPedido
   pagamento?: Prisma.NullableEnumMetodoPagamentoFieldUpdateOperationsInput | $Enums.MetodoPagamento | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -836,13 +836,13 @@ export type PedidoSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   id?: boolean
   usuarioId?: boolean
   enderecoId?: boolean
-  retirada?: boolean
   precoTotal?: boolean
+  imagemUrl?: boolean
   status?: boolean
   pagamento?: boolean
   createdAt?: boolean
   usuario?: boolean | Prisma.UsuarioDefaultArgs<ExtArgs>
-  endereco?: boolean | Prisma.Pedido$enderecoArgs<ExtArgs>
+  endereco?: boolean | Prisma.EnderecoDefaultArgs<ExtArgs>
   item?: boolean | Prisma.Pedido$itemArgs<ExtArgs>
   _count?: boolean | Prisma.PedidoCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["pedido"]>
@@ -851,68 +851,68 @@ export type PedidoSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extens
   id?: boolean
   usuarioId?: boolean
   enderecoId?: boolean
-  retirada?: boolean
   precoTotal?: boolean
+  imagemUrl?: boolean
   status?: boolean
   pagamento?: boolean
   createdAt?: boolean
   usuario?: boolean | Prisma.UsuarioDefaultArgs<ExtArgs>
-  endereco?: boolean | Prisma.Pedido$enderecoArgs<ExtArgs>
+  endereco?: boolean | Prisma.EnderecoDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["pedido"]>
 
 export type PedidoSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   usuarioId?: boolean
   enderecoId?: boolean
-  retirada?: boolean
   precoTotal?: boolean
+  imagemUrl?: boolean
   status?: boolean
   pagamento?: boolean
   createdAt?: boolean
   usuario?: boolean | Prisma.UsuarioDefaultArgs<ExtArgs>
-  endereco?: boolean | Prisma.Pedido$enderecoArgs<ExtArgs>
+  endereco?: boolean | Prisma.EnderecoDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["pedido"]>
 
 export type PedidoSelectScalar = {
   id?: boolean
   usuarioId?: boolean
   enderecoId?: boolean
-  retirada?: boolean
   precoTotal?: boolean
+  imagemUrl?: boolean
   status?: boolean
   pagamento?: boolean
   createdAt?: boolean
 }
 
-export type PedidoOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "usuarioId" | "enderecoId" | "retirada" | "precoTotal" | "status" | "pagamento" | "createdAt", ExtArgs["result"]["pedido"]>
+export type PedidoOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "usuarioId" | "enderecoId" | "precoTotal" | "imagemUrl" | "status" | "pagamento" | "createdAt", ExtArgs["result"]["pedido"]>
 export type PedidoInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   usuario?: boolean | Prisma.UsuarioDefaultArgs<ExtArgs>
-  endereco?: boolean | Prisma.Pedido$enderecoArgs<ExtArgs>
+  endereco?: boolean | Prisma.EnderecoDefaultArgs<ExtArgs>
   item?: boolean | Prisma.Pedido$itemArgs<ExtArgs>
   _count?: boolean | Prisma.PedidoCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type PedidoIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   usuario?: boolean | Prisma.UsuarioDefaultArgs<ExtArgs>
-  endereco?: boolean | Prisma.Pedido$enderecoArgs<ExtArgs>
+  endereco?: boolean | Prisma.EnderecoDefaultArgs<ExtArgs>
 }
 export type PedidoIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   usuario?: boolean | Prisma.UsuarioDefaultArgs<ExtArgs>
-  endereco?: boolean | Prisma.Pedido$enderecoArgs<ExtArgs>
+  endereco?: boolean | Prisma.EnderecoDefaultArgs<ExtArgs>
 }
 
 export type $PedidoPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "Pedido"
   objects: {
     usuario: Prisma.$UsuarioPayload<ExtArgs>
-    endereco: Prisma.$EnderecoPayload<ExtArgs> | null
+    endereco: Prisma.$EnderecoPayload<ExtArgs>
     item: Prisma.$ItemPedidoPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     usuarioId: string
-    enderecoId: string | null
-    retirada: string
+    enderecoId: string
     precoTotal: runtime.Decimal
+    imagemUrl: string | null
     status: $Enums.StatusPedido
     pagamento: $Enums.MetodoPagamento | null
     createdAt: Date
@@ -1311,7 +1311,7 @@ readonly fields: PedidoFieldRefs;
 export interface Prisma__PedidoClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   usuario<T extends Prisma.UsuarioDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UsuarioDefaultArgs<ExtArgs>>): Prisma.Prisma__UsuarioClient<runtime.Types.Result.GetResult<Prisma.$UsuarioPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-  endereco<T extends Prisma.Pedido$enderecoArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Pedido$enderecoArgs<ExtArgs>>): Prisma.Prisma__EnderecoClient<runtime.Types.Result.GetResult<Prisma.$EnderecoPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  endereco<T extends Prisma.EnderecoDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.EnderecoDefaultArgs<ExtArgs>>): Prisma.Prisma__EnderecoClient<runtime.Types.Result.GetResult<Prisma.$EnderecoPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   item<T extends Prisma.Pedido$itemArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Pedido$itemArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ItemPedidoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -1345,8 +1345,8 @@ export interface PedidoFieldRefs {
   readonly id: Prisma.FieldRef<"Pedido", 'String'>
   readonly usuarioId: Prisma.FieldRef<"Pedido", 'String'>
   readonly enderecoId: Prisma.FieldRef<"Pedido", 'String'>
-  readonly retirada: Prisma.FieldRef<"Pedido", 'String'>
   readonly precoTotal: Prisma.FieldRef<"Pedido", 'Decimal'>
+  readonly imagemUrl: Prisma.FieldRef<"Pedido", 'String'>
   readonly status: Prisma.FieldRef<"Pedido", 'StatusPedido'>
   readonly pagamento: Prisma.FieldRef<"Pedido", 'MetodoPagamento'>
   readonly createdAt: Prisma.FieldRef<"Pedido", 'DateTime'>
@@ -1748,25 +1748,6 @@ export type PedidoDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Intern
    * Limit how many Pedidos to delete.
    */
   limit?: number
-}
-
-/**
- * Pedido.endereco
- */
-export type Pedido$enderecoArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the Endereco
-   */
-  select?: Prisma.EnderecoSelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the Endereco
-   */
-  omit?: Prisma.EnderecoOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.EnderecoInclude<ExtArgs> | null
-  where?: Prisma.EnderecoWhereInput
 }
 
 /**

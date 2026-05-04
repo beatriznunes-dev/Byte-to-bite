@@ -1121,8 +1121,8 @@ export const PedidoScalarFieldEnum = {
   id: 'id',
   usuarioId: 'usuarioId',
   enderecoId: 'enderecoId',
-  retirada: 'retirada',
   precoTotal: 'precoTotal',
+  imagemUrl: 'imagemUrl',
   status: 'status',
   pagamento: 'pagamento',
   createdAt: 'createdAt'
