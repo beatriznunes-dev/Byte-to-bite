@@ -6,7 +6,8 @@ import { MetodoPagamento } from "../../generated/prisma/enums.js";
 
 interface CreatePedidoDTO {
   usuarioId: string;
-  enderecoId: string;
+  enderecoId?: string;
+  retirada: string;
   itens: { produtoId: number; quantidade: number }[];
 }
 
@@ -20,15 +21,22 @@ export class CreatePedidoService {
     const usuario = await this.usuarioRepository.findById(data.usuarioId);
     if (!usuario) throw new Error("Usuário não encontrado");
 
-    const endereco = await this.enderecoRepository.findById(data.enderecoId);
-    if (!endereco) throw new Error("Endereço não encontrado");
+    let local = null;
 
-    if (endereco.usuarioId !== data.usuarioId) {
-      throw new Error("Endereço não pertence ao usuário");
+    if (data.enderecoId) {
+      const endereco = await this.enderecoRepository.findById(data.enderecoId);
+      if (!endereco) throw new Error("Endereço não encontrado");
+      local = endereco;
+    }
+
+    if (local !== null) {
+      if (local.usuarioId !== data.usuarioId) {
+        throw new Error("Endereço não pertence ao usuário");
+      }
     }
 
     let precoTotal = 0;
-    const itensComPreco = [];
+    const itensComPreco: { produtoId: number; quantidade: number; precoDaUnidade: number }[] = [];
 
     for (const item of data.itens) {
       const produto = await this.produtoRepository.findById(item.produtoId);
@@ -55,7 +63,8 @@ export class CreatePedidoService {
 
     return this.pedidoRepository.create({
       usuarioId: data.usuarioId,
-      enderecoId: data.enderecoId,
+      enderecoId: data.enderecoId ?? undefined,
+      retirada: data.retirada,
       precoTotal,
       itens: itensComPreco,
     });

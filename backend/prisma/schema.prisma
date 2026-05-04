@@ -120,7 +120,8 @@ model ProdutoIngrediente {
 model Pedido {
   id         String @id @default(uuid())
   usuarioId     String
-  enderecoId String
+  enderecoId String?
+  retirada   String
 
   precoTotal Decimal
 
@@ -131,7 +132,7 @@ model Pedido {
 
   usuario     Usuario  @relation(fields: [usuarioId], references: [id])
 
-  endereco   Endereco @relation(fields: [enderecoId], references: [id])
+  endereco   Endereco? @relation(fields: [enderecoId], references: [id])
 
   item ItemPedido[]
 }

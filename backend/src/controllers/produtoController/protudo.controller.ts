@@ -54,7 +54,7 @@ export class ProdutoController {
     const { id } = request.params as { id: number };
 
     const service = new GetProdutoService();
-    const produto = await service.executar(id);
+    const produto = await service.executar(Number(id));
 
     return reply.status(200).send(produto);
   }
@@ -72,7 +72,7 @@ export class ProdutoController {
     };
 
     const service = new UpdateProdutoService();
-    const produto = await service.executar(id, data);
+    const produto = await service.executar(Number(id), data);
 
     return reply.status(200).send(produto);
   }
@@ -81,7 +81,7 @@ export class ProdutoController {
     const { id } = request.params as { id: number };
 
     const service = new DeleteProdutoService();
-    await service.executar(id);
+    await service.executar(Number(id));
 
     return reply.status(204).send();
   }

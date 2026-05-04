@@ -4,15 +4,17 @@ import { StatusPedido, MetodoPagamento } from "../generated/prisma/enums.js";
 export class PedidoRepository {
   async create(data: {
     usuarioId: string;
-    enderecoId: string;
+    enderecoId?: string;
+    retirada: string;
     precoTotal: number;
     itens: { produtoId: number; quantidade: number; precoDaUnidade: number }[];
   }) {
-    const { itens, ...pedidoData } = data;
+    const { itens, enderecoId, ...pedidoData } = data;
 
     return prisma.pedido.create({
       data: {
         ...pedidoData,
+        ...(enderecoId && { enderecoId }),
         item: {
           create: itens.map((i) => ({
             produtoId: i.produtoId,
