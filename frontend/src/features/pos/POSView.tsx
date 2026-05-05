@@ -141,22 +141,8 @@ const salvarOuAtualizarProduto = async () => {
       descricao: novaDesc || '',
       estoque: 999,
       tempoProducao: 15,
-      // Se for edição, usamos 'set' para substituir os ingredientes antigos
-      // Se for criação, usamos 'create'
-      ingredientes: editandoId 
-        ? {
-            deleteMany: {}, // Limpa os antigos para evitar duplicatas
-            create: ingredientesSelecionados.map((id) => ({
-              ingredienteId: Number(id),
-              quantidade: 1
-            }))
-          }
-        : {
-            create: ingredientesSelecionados.map((id) => ({
-              ingredienteId: Number(id),
-              quantidade: 1
-            }))
-          },
+      // Enviamos apenas o Array de números para o loop do backend[cite: 5]
+      ingredientes: ingredientesSelecionados.map((id) => Number(id)),
     };
 
     if (imagemFinal) dados.imagemUrl = imagemFinal;
@@ -166,11 +152,13 @@ const salvarOuAtualizarProduto = async () => {
     } else {
       await api.post('/produtos', dados);
     }
+    
     carregarDados();
     fecharModalCadastro();
+    alert('Produto salvo com sucesso!');
   } catch (err: any) {
-    alert('Erro ao salvar produto. Verifique o console.');
-    console.error(err);
+    console.error('Erro detalhado:', err.response?.data || err.message);
+    alert(`Erro ao salvar: ${err.response?.data?.message || 'Verifique os campos'}`);
   } finally {
     setSalvando(false);
   }
@@ -272,61 +260,79 @@ const salvarOuAtualizarProduto = async () => {
   };
 
   const finalizarPedido = async () => {
-  if (!nomeCliente.trim()) return alert('Informe o nome do cliente.');
-  if (cart.length === 0) return alert('Carrinho vazio.');
+    // 1. Validações básicas
+    if (!nomeCliente.trim()) return alert('O nome do cliente é obrigatório.');
+    if (cart.length === 0) return alert('O carrinho não pode estar vazio.');
 
-  const usuarioId = getUsuarioIdDoToken();
-  if (!usuarioId) return alert('Sessão expirada. Faça login novamente.');
+    if (tipoPedido === 'ENTREGA') {
+      if (!rua.trim() || !numero.trim() || !bairro.trim() || !cidade.trim())
+        return alert('Preencha todos os campos de endereço para entrega.');
+    }
 
-  setFinalizando(true);
-  try {
-    const payload = {
-      usuarioId,
-      nomeCliente: nomeCliente.trim(),
-      tipoPedido,
-      precoTotal: totalPreco,
-      status: 'EM_PREPARO',
-      pagamento: formaPagamento,
-      itens: cart.map((i) => ({
-        produtoId: Number(i.produto.id),
-        quantidade: i.quantidade,
-        precoDaUnidade: Number(i.produto.preco)
-      })),
-      retirada: tipoPedido === 'RETIRADA' ? 'SIM' : 'NAO',
-      // Endereço ocultado se não for ENTREGA
-      ...(tipoPedido === 'ENTREGA' && {
-        endereco: { rua, numeroDaCasa: numero, bairro, cidade }
-      })
-    };
+    const usuarioId = getUsuarioIdDoToken();
+    if (!usuarioId) return alert('Sessão inválida. Por favor, faça login novamente.');
 
-    // Salva no Banco de Dados (isso alimentará automaticamente a SalesView)
-    const res = await api.post('/pedidos', payload);
-    
-    const dadosRecibo = {
-      id: res.data.id,
-      cliente: nomeCliente,
-      data: new Date().toLocaleString('pt-BR'),
-      itens: [...cart],
-      total: totalPreco,
-      tipoPedido,
-      pagamento: formaPagamento,
-    };
+    setFinalizando(true);
+    try {
+      // 2. Se for entrega, cria o endereço primeiro e obtém o enderecoId
+      let enderecoId: string | null = null;
+      if (tipoPedido === 'ENTREGA') {
+        const enderecoRes = await api.post('/enderecos', {
+          usuarioId,
+          rua,
+          numeroDaCasa: numero,
+          bairro,
+          cidade,
+        });
+        enderecoId = enderecoRes.data.id;
+      }
 
-    setComprovante(dadosRecibo);
-    setCart([]);
-    setShowCheckout(false);
-    setNomeCliente('');
-    
-    // Chama a impressão automática
-    imprimirRecibo();
+      // 3. Monta o payload conforme o schema do Prisma (model Pedido)
+      const payload: any = {
+        nomeCliente,           // campo extra aceito pelo backend para exibição
+        usuarioId,
+        retirada: tipoPedido === 'RETIRADA' ? 'SIM' : 'NAO',
+        precoTotal: Number(totalPreco),
+        status: 'EM_PREPARO',
+        pagamento: formaPagamento,
+        enderecoId,            // null se LOCAL/RETIRADA, UUID se ENTREGA
+        itens: cart.map((i) => ({
+          produtoId: Number(i.produto.id),
+          quantidade: i.quantidade,
+          precoDaUnidade: Number(i.produto.preco),
+        })),
+      };
 
-  } catch (err) {
-    console.error(err);
-    alert('Erro ao finalizar pedido.');
-  } finally {
-    setFinalizando(false);
-  }
-};
+      // 4. Cria o pedido
+      const response = await api.post('/pedidos', payload);
+
+      // 5. Exibe comprovante e limpa o estado
+      setComprovante({
+        id: response.data.id,
+        cliente: nomeCliente,
+        data: new Date().toLocaleString('pt-BR'),
+        itens: [...cart],
+        total: totalPreco,
+        tipoPedido,
+        pagamento: formaPagamento,
+      });
+
+      setCart([]);
+      setShowCheckout(false);
+      setNomeCliente('');
+      setRua('');
+      setNumero('');
+      setBairro('');
+      setCidade('');
+
+    } catch (err: any) {
+      const erroBackend = err.response?.data || err.message;
+      console.error('ERRO AO FINALIZAR PEDIDO:', erroBackend);
+      alert(`Erro: ${err.response?.data?.message || 'Falha ao salvar o pedido. Verifique o console.'}`);
+    } finally {
+      setFinalizando(false);
+    }
+  };
 
   return (
     <div className="p-8 bg-[#FDF2F0] min-h-screen pb-40 font-sans">

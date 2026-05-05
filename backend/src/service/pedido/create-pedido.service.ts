@@ -7,7 +7,9 @@ import { MetodoPagamento } from "../../generated/prisma/enums.js";
 interface CreatePedidoDTO {
   usuarioId: string;
   enderecoId?: string;
+  nomeCliente: string;
   retirada: string;
+  pagamento?: string;
   itens: { produtoId: number; quantidade: number }[];
 }
 
@@ -64,7 +66,9 @@ export class CreatePedidoService {
     return this.pedidoRepository.create({
       usuarioId: data.usuarioId,
       enderecoId: data.enderecoId ?? undefined,
+      nomeCliente: data.nomeCliente,
       retirada: data.retirada,
+      pagamento: data.pagamento,
       precoTotal,
       itens: itensComPreco,
     });

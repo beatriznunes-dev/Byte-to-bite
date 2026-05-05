@@ -38,6 +38,7 @@ export type PedidoMinAggregateOutputType = {
   id: string | null
   usuarioId: string | null
   enderecoId: string | null
+  nomeCliente: string | null
   retirada: string | null
   precoTotal: runtime.Decimal | null
   imagemUrl: string | null
@@ -50,6 +51,7 @@ export type PedidoMaxAggregateOutputType = {
   id: string | null
   usuarioId: string | null
   enderecoId: string | null
+  nomeCliente: string | null
   retirada: string | null
   precoTotal: runtime.Decimal | null
   imagemUrl: string | null
@@ -62,6 +64,7 @@ export type PedidoCountAggregateOutputType = {
   id: number
   usuarioId: number
   enderecoId: number
+  nomeCliente: number
   retirada: number
   precoTotal: number
   imagemUrl: number
@@ -84,6 +87,7 @@ export type PedidoMinAggregateInputType = {
   id?: true
   usuarioId?: true
   enderecoId?: true
+  nomeCliente?: true
   retirada?: true
   precoTotal?: true
   imagemUrl?: true
@@ -96,6 +100,7 @@ export type PedidoMaxAggregateInputType = {
   id?: true
   usuarioId?: true
   enderecoId?: true
+  nomeCliente?: true
   retirada?: true
   precoTotal?: true
   imagemUrl?: true
@@ -108,6 +113,7 @@ export type PedidoCountAggregateInputType = {
   id?: true
   usuarioId?: true
   enderecoId?: true
+  nomeCliente?: true
   retirada?: true
   precoTotal?: true
   imagemUrl?: true
@@ -207,6 +213,7 @@ export type PedidoGroupByOutputType = {
   id: string
   usuarioId: string
   enderecoId: string | null
+  nomeCliente: string
   retirada: string
   precoTotal: runtime.Decimal
   imagemUrl: string | null
@@ -242,6 +249,7 @@ export type PedidoWhereInput = {
   id?: Prisma.StringFilter<"Pedido"> | string
   usuarioId?: Prisma.StringFilter<"Pedido"> | string
   enderecoId?: Prisma.StringNullableFilter<"Pedido"> | string | null
+  nomeCliente?: Prisma.StringFilter<"Pedido"> | string
   retirada?: Prisma.StringFilter<"Pedido"> | string
   precoTotal?: Prisma.DecimalFilter<"Pedido"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   imagemUrl?: Prisma.StringNullableFilter<"Pedido"> | string | null
@@ -257,6 +265,7 @@ export type PedidoOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   usuarioId?: Prisma.SortOrder
   enderecoId?: Prisma.SortOrderInput | Prisma.SortOrder
+  nomeCliente?: Prisma.SortOrder
   retirada?: Prisma.SortOrder
   precoTotal?: Prisma.SortOrder
   imagemUrl?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -275,6 +284,7 @@ export type PedidoWhereUniqueInput = Prisma.AtLeast<{
   NOT?: Prisma.PedidoWhereInput | Prisma.PedidoWhereInput[]
   usuarioId?: Prisma.StringFilter<"Pedido"> | string
   enderecoId?: Prisma.StringNullableFilter<"Pedido"> | string | null
+  nomeCliente?: Prisma.StringFilter<"Pedido"> | string
   retirada?: Prisma.StringFilter<"Pedido"> | string
   precoTotal?: Prisma.DecimalFilter<"Pedido"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   imagemUrl?: Prisma.StringNullableFilter<"Pedido"> | string | null
@@ -290,6 +300,7 @@ export type PedidoOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   usuarioId?: Prisma.SortOrder
   enderecoId?: Prisma.SortOrderInput | Prisma.SortOrder
+  nomeCliente?: Prisma.SortOrder
   retirada?: Prisma.SortOrder
   precoTotal?: Prisma.SortOrder
   imagemUrl?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -310,6 +321,7 @@ export type PedidoScalarWhereWithAggregatesInput = {
   id?: Prisma.StringWithAggregatesFilter<"Pedido"> | string
   usuarioId?: Prisma.StringWithAggregatesFilter<"Pedido"> | string
   enderecoId?: Prisma.StringNullableWithAggregatesFilter<"Pedido"> | string | null
+  nomeCliente?: Prisma.StringWithAggregatesFilter<"Pedido"> | string
   retirada?: Prisma.StringWithAggregatesFilter<"Pedido"> | string
   precoTotal?: Prisma.DecimalWithAggregatesFilter<"Pedido"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   imagemUrl?: Prisma.StringNullableWithAggregatesFilter<"Pedido"> | string | null
@@ -320,6 +332,7 @@ export type PedidoScalarWhereWithAggregatesInput = {
 
 export type PedidoCreateInput = {
   id?: string
+  nomeCliente: string
   retirada: string
   precoTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
   imagemUrl?: string | null
@@ -335,6 +348,7 @@ export type PedidoUncheckedCreateInput = {
   id?: string
   usuarioId: string
   enderecoId?: string | null
+  nomeCliente: string
   retirada: string
   precoTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
   imagemUrl?: string | null
@@ -346,6 +360,7 @@ export type PedidoUncheckedCreateInput = {
 
 export type PedidoUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  nomeCliente?: Prisma.StringFieldUpdateOperationsInput | string
   retirada?: Prisma.StringFieldUpdateOperationsInput | string
   precoTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   imagemUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -361,6 +376,7 @@ export type PedidoUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   usuarioId?: Prisma.StringFieldUpdateOperationsInput | string
   enderecoId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nomeCliente?: Prisma.StringFieldUpdateOperationsInput | string
   retirada?: Prisma.StringFieldUpdateOperationsInput | string
   precoTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   imagemUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -374,6 +390,7 @@ export type PedidoCreateManyInput = {
   id?: string
   usuarioId: string
   enderecoId?: string | null
+  nomeCliente: string
   retirada: string
   precoTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
   imagemUrl?: string | null
@@ -384,6 +401,7 @@ export type PedidoCreateManyInput = {
 
 export type PedidoUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  nomeCliente?: Prisma.StringFieldUpdateOperationsInput | string
   retirada?: Prisma.StringFieldUpdateOperationsInput | string
   precoTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   imagemUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -396,6 +414,7 @@ export type PedidoUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   usuarioId?: Prisma.StringFieldUpdateOperationsInput | string
   enderecoId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nomeCliente?: Prisma.StringFieldUpdateOperationsInput | string
   retirada?: Prisma.StringFieldUpdateOperationsInput | string
   precoTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   imagemUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -418,6 +437,7 @@ export type PedidoCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   usuarioId?: Prisma.SortOrder
   enderecoId?: Prisma.SortOrder
+  nomeCliente?: Prisma.SortOrder
   retirada?: Prisma.SortOrder
   precoTotal?: Prisma.SortOrder
   imagemUrl?: Prisma.SortOrder
@@ -434,6 +454,7 @@ export type PedidoMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   usuarioId?: Prisma.SortOrder
   enderecoId?: Prisma.SortOrder
+  nomeCliente?: Prisma.SortOrder
   retirada?: Prisma.SortOrder
   precoTotal?: Prisma.SortOrder
   imagemUrl?: Prisma.SortOrder
@@ -446,6 +467,7 @@ export type PedidoMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   usuarioId?: Prisma.SortOrder
   enderecoId?: Prisma.SortOrder
+  nomeCliente?: Prisma.SortOrder
   retirada?: Prisma.SortOrder
   precoTotal?: Prisma.SortOrder
   imagemUrl?: Prisma.SortOrder
@@ -571,6 +593,7 @@ export type PedidoUpdateOneRequiredWithoutItemNestedInput = {
 
 export type PedidoCreateWithoutUsuarioInput = {
   id?: string
+  nomeCliente: string
   retirada: string
   precoTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
   imagemUrl?: string | null
@@ -584,6 +607,7 @@ export type PedidoCreateWithoutUsuarioInput = {
 export type PedidoUncheckedCreateWithoutUsuarioInput = {
   id?: string
   enderecoId?: string | null
+  nomeCliente: string
   retirada: string
   precoTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
   imagemUrl?: string | null
@@ -626,6 +650,7 @@ export type PedidoScalarWhereInput = {
   id?: Prisma.StringFilter<"Pedido"> | string
   usuarioId?: Prisma.StringFilter<"Pedido"> | string
   enderecoId?: Prisma.StringNullableFilter<"Pedido"> | string | null
+  nomeCliente?: Prisma.StringFilter<"Pedido"> | string
   retirada?: Prisma.StringFilter<"Pedido"> | string
   precoTotal?: Prisma.DecimalFilter<"Pedido"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   imagemUrl?: Prisma.StringNullableFilter<"Pedido"> | string | null
@@ -636,6 +661,7 @@ export type PedidoScalarWhereInput = {
 
 export type PedidoCreateWithoutEnderecoInput = {
   id?: string
+  nomeCliente: string
   retirada: string
   precoTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
   imagemUrl?: string | null
@@ -649,6 +675,7 @@ export type PedidoCreateWithoutEnderecoInput = {
 export type PedidoUncheckedCreateWithoutEnderecoInput = {
   id?: string
   usuarioId: string
+  nomeCliente: string
   retirada: string
   precoTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
   imagemUrl?: string | null
@@ -686,6 +713,7 @@ export type PedidoUpdateManyWithWhereWithoutEnderecoInput = {
 
 export type PedidoCreateWithoutItemInput = {
   id?: string
+  nomeCliente: string
   retirada: string
   precoTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
   imagemUrl?: string | null
@@ -700,6 +728,7 @@ export type PedidoUncheckedCreateWithoutItemInput = {
   id?: string
   usuarioId: string
   enderecoId?: string | null
+  nomeCliente: string
   retirada: string
   precoTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
   imagemUrl?: string | null
@@ -726,6 +755,7 @@ export type PedidoUpdateToOneWithWhereWithoutItemInput = {
 
 export type PedidoUpdateWithoutItemInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  nomeCliente?: Prisma.StringFieldUpdateOperationsInput | string
   retirada?: Prisma.StringFieldUpdateOperationsInput | string
   precoTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   imagemUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -740,6 +770,7 @@ export type PedidoUncheckedUpdateWithoutItemInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   usuarioId?: Prisma.StringFieldUpdateOperationsInput | string
   enderecoId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nomeCliente?: Prisma.StringFieldUpdateOperationsInput | string
   retirada?: Prisma.StringFieldUpdateOperationsInput | string
   precoTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   imagemUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -751,6 +782,7 @@ export type PedidoUncheckedUpdateWithoutItemInput = {
 export type PedidoCreateManyUsuarioInput = {
   id?: string
   enderecoId?: string | null
+  nomeCliente: string
   retirada: string
   precoTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
   imagemUrl?: string | null
@@ -761,6 +793,7 @@ export type PedidoCreateManyUsuarioInput = {
 
 export type PedidoUpdateWithoutUsuarioInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  nomeCliente?: Prisma.StringFieldUpdateOperationsInput | string
   retirada?: Prisma.StringFieldUpdateOperationsInput | string
   precoTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   imagemUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -774,6 +807,7 @@ export type PedidoUpdateWithoutUsuarioInput = {
 export type PedidoUncheckedUpdateWithoutUsuarioInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   enderecoId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nomeCliente?: Prisma.StringFieldUpdateOperationsInput | string
   retirada?: Prisma.StringFieldUpdateOperationsInput | string
   precoTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   imagemUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -786,6 +820,7 @@ export type PedidoUncheckedUpdateWithoutUsuarioInput = {
 export type PedidoUncheckedUpdateManyWithoutUsuarioInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   enderecoId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nomeCliente?: Prisma.StringFieldUpdateOperationsInput | string
   retirada?: Prisma.StringFieldUpdateOperationsInput | string
   precoTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   imagemUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -797,6 +832,7 @@ export type PedidoUncheckedUpdateManyWithoutUsuarioInput = {
 export type PedidoCreateManyEnderecoInput = {
   id?: string
   usuarioId: string
+  nomeCliente: string
   retirada: string
   precoTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
   imagemUrl?: string | null
@@ -807,6 +843,7 @@ export type PedidoCreateManyEnderecoInput = {
 
 export type PedidoUpdateWithoutEnderecoInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  nomeCliente?: Prisma.StringFieldUpdateOperationsInput | string
   retirada?: Prisma.StringFieldUpdateOperationsInput | string
   precoTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   imagemUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -820,6 +857,7 @@ export type PedidoUpdateWithoutEnderecoInput = {
 export type PedidoUncheckedUpdateWithoutEnderecoInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   usuarioId?: Prisma.StringFieldUpdateOperationsInput | string
+  nomeCliente?: Prisma.StringFieldUpdateOperationsInput | string
   retirada?: Prisma.StringFieldUpdateOperationsInput | string
   precoTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   imagemUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -832,6 +870,7 @@ export type PedidoUncheckedUpdateWithoutEnderecoInput = {
 export type PedidoUncheckedUpdateManyWithoutEnderecoInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   usuarioId?: Prisma.StringFieldUpdateOperationsInput | string
+  nomeCliente?: Prisma.StringFieldUpdateOperationsInput | string
   retirada?: Prisma.StringFieldUpdateOperationsInput | string
   precoTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   imagemUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -875,6 +914,7 @@ export type PedidoSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   id?: boolean
   usuarioId?: boolean
   enderecoId?: boolean
+  nomeCliente?: boolean
   retirada?: boolean
   precoTotal?: boolean
   imagemUrl?: boolean
@@ -891,6 +931,7 @@ export type PedidoSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extens
   id?: boolean
   usuarioId?: boolean
   enderecoId?: boolean
+  nomeCliente?: boolean
   retirada?: boolean
   precoTotal?: boolean
   imagemUrl?: boolean
@@ -905,6 +946,7 @@ export type PedidoSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extens
   id?: boolean
   usuarioId?: boolean
   enderecoId?: boolean
+  nomeCliente?: boolean
   retirada?: boolean
   precoTotal?: boolean
   imagemUrl?: boolean
@@ -919,6 +961,7 @@ export type PedidoSelectScalar = {
   id?: boolean
   usuarioId?: boolean
   enderecoId?: boolean
+  nomeCliente?: boolean
   retirada?: boolean
   precoTotal?: boolean
   imagemUrl?: boolean
@@ -927,7 +970,7 @@ export type PedidoSelectScalar = {
   createdAt?: boolean
 }
 
-export type PedidoOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "usuarioId" | "enderecoId" | "retirada" | "precoTotal" | "imagemUrl" | "status" | "pagamento" | "createdAt", ExtArgs["result"]["pedido"]>
+export type PedidoOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "usuarioId" | "enderecoId" | "nomeCliente" | "retirada" | "precoTotal" | "imagemUrl" | "status" | "pagamento" | "createdAt", ExtArgs["result"]["pedido"]>
 export type PedidoInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   usuario?: boolean | Prisma.UsuarioDefaultArgs<ExtArgs>
   endereco?: boolean | Prisma.Pedido$enderecoArgs<ExtArgs>
@@ -954,6 +997,7 @@ export type $PedidoPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
     id: string
     usuarioId: string
     enderecoId: string | null
+    nomeCliente: string
     retirada: string
     precoTotal: runtime.Decimal
     imagemUrl: string | null
@@ -1389,6 +1433,7 @@ export interface PedidoFieldRefs {
   readonly id: Prisma.FieldRef<"Pedido", 'String'>
   readonly usuarioId: Prisma.FieldRef<"Pedido", 'String'>
   readonly enderecoId: Prisma.FieldRef<"Pedido", 'String'>
+  readonly nomeCliente: Prisma.FieldRef<"Pedido", 'String'>
   readonly retirada: Prisma.FieldRef<"Pedido", 'String'>
   readonly precoTotal: Prisma.FieldRef<"Pedido", 'Decimal'>
   readonly imagemUrl: Prisma.FieldRef<"Pedido", 'String'>

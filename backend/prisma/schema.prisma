@@ -121,6 +121,7 @@ model Pedido {
   id         String @id @default(uuid())
   usuarioId     String
   enderecoId String?
+  nomeCliente String
   retirada   String
 
   precoTotal Decimal

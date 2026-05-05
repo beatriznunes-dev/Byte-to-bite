@@ -9,15 +9,18 @@ import { StatusPedido } from "../../generated/prisma/enums.js";
 
 export class PedidoController {
   async create(request: FastifyRequest, reply: FastifyReply) {
-    const { usuarioId, enderecoId, retirada, itens } = request.body as {
+    const { usuarioId, enderecoId, nomeCliente, retirada, precoTotal, pagamento, itens } = request.body as {
       usuarioId: string;
-      enderecoId: string;
+      enderecoId?: string;
+      nomeCliente: string;
       retirada: string;
-      itens: { produtoId: number; quantidade: number }[];
+      precoTotal: number;
+      pagamento?: string;
+      itens: { produtoId: number; quantidade: number; precoDaUnidade: number }[];
     };
 
     const service = new CreatePedidoService();
-    const pedido = await service.executar({usuarioId, enderecoId, retirada, itens});
+    const pedido = await service.executar({ usuarioId, enderecoId, nomeCliente, retirada, precoTotal, pagamento, itens });
 
     return reply.status(201).send(pedido);
   }
