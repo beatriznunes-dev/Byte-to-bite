@@ -13,6 +13,7 @@ export interface Ingrediente {
 }
 
 export interface Produto {
+  ingredientes: any;
   isPopular: import("react/jsx-runtime").JSX.Element;
   id: number;
   nome: string;

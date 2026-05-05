@@ -1,282 +1,589 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { useEffect, useState } from 'react';
 import { api } from '../../services/api';
-import type { Produto } from '../../types/types';
+import type { Produto, Ingrediente } from '../../types/types';
 
-interface CartItem { produto: Produto; quantidade: number; }
-interface Endereco { id: string; rua: string; bairro: string; cidade: string; numeroDaCasa: string; }
+interface CartItem {
+  produto: Partial<Produto>;
+  quantidade: number;
+  idUnico: string;
+}
 
-function getUserIdFromToken(): string | null {
-  try {
-    const token = localStorage.getItem('@ByteToBite:token');
-    if (!token) return null;
-    return JSON.parse(atob(token.split('.')[1])).sub || null;
-  } catch { return null; }
+// --- MODAL DE EXCLUSÃO ---
+function DeleteModal({
+  produto,
+  onConfirm,
+  onCancel,
+}: {
+  produto: Produto;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 bg-slate-900/60 flex items-center justify-center z-[200] backdrop-blur-sm p-4">
+      <div className="bg-white p-10 rounded-[40px] shadow-2xl w-full max-w-md border border-slate-100 animate-in zoom-in-95 duration-200">
+        <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center mb-6">
+          <span className="material-symbols-outlined text-red-600 text-4xl">delete</span>
+        </div>
+        <h2 className="text-3xl font-black text-slate-900 mb-3 tracking-tight">Excluir Produto</h2>
+        <p className="text-slate-600 font-medium leading-relaxed mb-10">
+          Deseja excluir <span className="font-black text-slate-900 italic">"{produto.nome}"</span> permanentemente?
+        </p>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <button
+            onClick={onCancel}
+            className="flex-1 px-6 py-4 font-black text-slate-700 bg-slate-100 hover:bg-slate-200 border-2 border-slate-200 rounded-2xl transition-all order-2 sm:order-1 uppercase text-xs tracking-widest"
+          >
+            Manter
+          </button>
+          <button
+            onClick={onConfirm}
+            className="flex-1 bg-red-600 text-white px-6 py-4 rounded-2xl font-black uppercase tracking-widest hover:bg-red-700 active:scale-95 transition-all shadow-lg order-1 sm:order-2 text-xs"
+          >
+            Sim, Excluir
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export function POSView() {
   const [products, setProducts] = useState<Produto[]>([]);
-  const [loading, setLoading] = useState(true);
-  // ─── ESTADO DO CARRINHO (NOVO) ───────────────────────────────────────────
+  const [ingredientesDisponiveis, setIngredientesDisponiveis] = useState<Ingrediente[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [showCheckout, setShowCheckout] = useState(false);
-  const [enderecos, setEnderecos] = useState<Endereco[]>([]);
-  const [enderecoSelecionado, setEnderecoSelecionado] = useState('');
-  const [showNovoEndereco, setShowNovoEndereco] = useState(false);
   const [finalizando, setFinalizando] = useState(false);
-  const [sucesso, setSucesso] = useState(false);
-  const [novoRua, setNovoRua] = useState('');
-  const [novoBairro, setNovoBairro] = useState('');
-  const [novoCidade, setNovoCidade] = useState('');
-  const [novoNumero, setNovoNumero] = useState('');
-  const usuarioId = getUserIdFromToken();
-  const totalItens = cart.reduce((acc, i) => acc + i.quantidade, 0);
+  const [comprovante, setComprovante] = useState<any>(null);
+
+  const [showCadastroModal, setShowCadastroModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [produtoParaExcluir, setProdutoParaExcluir] = useState<Produto | null>(null);
+  const [editandoId, setEditandoId] = useState<number | null>(null);
+
+  const [nomeCliente, setNomeCliente] = useState('');
+  const [tipoPedido, setTipoPedido] = useState<'LOCAL' | 'RETIRADA' | 'ENTREGA'>('LOCAL');
+  const [formaPagamento, setFormaPagamento] = useState<'PIX' | 'CARTAO' | 'DINHEIRO'>('PIX');
+  const [rua, setRua] = useState('');
+  const [numero, setNumero] = useState('');
+  const [bairro, setBairro] = useState('');
+  const [cidade, setCidade] = useState('');
+
+  const [novoNome, setNovoNome] = useState('');
+  const [novoPreco, setNovoPreco] = useState('');
+  const [novaDesc, setNovaDesc] = useState('');
+  const [novaImagemUrl, setNovaImagemUrl] = useState('');
+  const [imagemBase64, setImagemBase64] = useState<string | null>(null);
+  const [imagemNome, setImagemNome] = useState('');
+  const [ingredientesSelecionados, setIngredientesSelecionados] = useState<number[]>([]);
+  const [salvando, setSalvando] = useState(false);
+
   const totalPreco = cart.reduce((acc, i) => acc + (Number(i.produto.preco) * i.quantidade), 0);
-
-  function addToCart(produto: Produto) {
-    setCart(prev => {
-      const existing = prev.find(i => i.produto.id === produto.id);
-      if (existing) return prev.map(i => i.produto.id === produto.id ? { ...i, quantidade: i.quantidade + 1 } : i);
-      return [...prev, { produto, quantidade: 1 }];
-    });
-  }
-  function removeFromCart(produtoId: number) {
-    setCart(prev => {
-      const existing = prev.find(i => i.produto.id === produtoId);
-      if (existing && existing.quantidade > 1) return prev.map(i => i.produto.id === produtoId ? { ...i, quantidade: i.quantidade - 1 } : i);
-      return prev.filter(i => i.produto.id !== produtoId);
-    });
-  }
+  const totalItens = cart.reduce((acc, i) => acc + i.quantidade, 0);
 
   useEffect(() => {
-    if (showCheckout && usuarioId) {
-      api.get(`/enderecos/${usuarioId}`)
-        .then(r => { setEnderecos(r.data); if (r.data.length > 0) setEnderecoSelecionado(r.data[0].id); })
-        .catch(() => setEnderecos([]));
-    }
-  }, [showCheckout, usuarioId]);
-
-  async function finalizarPedido() {
-    if (!usuarioId || cart.length === 0) return;
-    setFinalizando(true);
-    try {
-      let endId = enderecoSelecionado;
-      if (!endId || showNovoEndereco) {
-        if (!novoRua || !novoBairro || !novoCidade || !novoNumero) { alert('Preencha todos os campos do endereço.'); setFinalizando(false); return; }
-        const r = await api.post('/enderecos', { usuarioId, rua: novoRua, bairro: novoBairro, cidade: novoCidade, numeroDaCasa: novoNumero });
-        endId = r.data.id;
-      }
-      await api.post('/pedidos', { usuarioId, enderecoId: endId, itens: cart.map(i => ({ produtoId: i.produto.id, quantidade: i.quantidade })) });
-      setSucesso(true);
-      setCart([]);
-      setTimeout(() => { setSucesso(false); setShowCheckout(false); setShowNovoEndereco(false); setNovoRua(''); setNovoBairro(''); setNovoCidade(''); setNovoNumero(''); }, 2500);
-    } catch (err) {
-  alert((err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Erro ao finalizar pedido.');
-  } finally { setFinalizando(false); }
-  }
-  // ────────────────────────────────────────────────────────────────────────────
-
-  useEffect(() => {
-    api.get('/produtos')
-      .then(response => {
-        setProducts(response.data);
-      })
-      .finally(() => setLoading(false));
+    carregarDados();
   }, []);
 
+  const carregarDados = async () => {
+    try {
+      const [prodRes, ingRes] = await Promise.all([
+        api.get('/produtos'),
+        api.get('/ingredientes'),
+      ]);
+      setProducts(prodRes.data);
+      const ingData = Array.isArray(ingRes.data) ? ingRes.data : ingRes.data.ingredientes;
+      setIngredientesDisponiveis(ingData || []);
+    } catch (err) {
+      console.error('Erro ao carregar dados', err);
+    }
+  };
+
+  const handleImageFile = (file: File) => {
+    if (file.size > 1024 * 1024) {
+      alert('Imagem muito grande! Máximo 1MB.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagemBase64(reader.result as string);
+      setImagemNome(file.name);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleImageInput = (e: React.ChangeEvent<HTMLInputElement> | React.ClipboardEvent) => {
+    let file: File | null = null;
+    if ('files' in e.target && (e.target as HTMLInputElement).files) {
+      file = (e.target as HTMLInputElement).files![0];
+    } else if ('clipboardData' in e) {
+      const items = (e as React.ClipboardEvent).clipboardData.items;
+      for (const item of items) {
+        if (item.type.indexOf('image') !== -1) file = item.getAsFile();
+      }
+    }
+    if (file) handleImageFile(file);
+  };
+
+  const previewImagem = imagemBase64 || novaImagemUrl;
+
+  // --- LOGICA DE ATUALIZAÇÃO ---
+const salvarOuAtualizarProduto = async () => {
+  if (!novoNome || !novoPreco) return alert('Nome e preço são obrigatórios!');
+
+  setSalvando(true);
+  try {
+    const imagemFinal = imagemBase64 || novaImagemUrl || null;
+
+    const dados: any = {
+      nome: novoNome,
+      preco: Number(novoPreco),
+      descricao: novaDesc || '',
+      estoque: 999,
+      tempoProducao: 15,
+      // Se for edição, usamos 'set' para substituir os ingredientes antigos
+      // Se for criação, usamos 'create'
+      ingredientes: editandoId 
+        ? {
+            deleteMany: {}, // Limpa os antigos para evitar duplicatas
+            create: ingredientesSelecionados.map((id) => ({
+              ingredienteId: Number(id),
+              quantidade: 1
+            }))
+          }
+        : {
+            create: ingredientesSelecionados.map((id) => ({
+              ingredienteId: Number(id),
+              quantidade: 1
+            }))
+          },
+    };
+
+    if (imagemFinal) dados.imagemUrl = imagemFinal;
+
+    if (editandoId) {
+      await api.put(`/produtos/${Number(editandoId)}`, dados);
+    } else {
+      await api.post('/produtos', dados);
+    }
+    carregarDados();
+    fecharModalCadastro();
+  } catch (err: any) {
+    alert('Erro ao salvar produto. Verifique o console.');
+    console.error(err);
+  } finally {
+    setSalvando(false);
+  }
+};
+
+  const fecharModalCadastro = () => {
+    setShowCadastroModal(false);
+    setEditandoId(null);
+    setNovoNome('');
+    setNovoPreco('');
+    setNovaDesc('');
+    setNovaImagemUrl('');
+    setImagemBase64(null);
+    setImagemNome('');
+    setIngredientesSelecionados([]);
+  };
+
+  const abrirEdicao = (p: Produto) => {
+    setEditandoId(Number(p.id));
+    setNovoNome(p.nome);
+    setNovoPreco(String(p.preco));
+    setNovaDesc(p.descricao || '');
+    if (p.imagemUrl && !p.imagemUrl.startsWith('data:')) {
+      setNovaImagemUrl(p.imagemUrl);
+      setImagemBase64(null);
+    } else {
+      setImagemBase64(p.imagemUrl || null);
+      setNovaImagemUrl('');
+    }
+    setIngredientesSelecionados(p.ingredientes?.map((i: any) => i.ingredienteId ?? i.id) ?? []);
+    setShowCadastroModal(true);
+  };
+
+  const abrirDeleteModal = (p: Produto) => {
+    setProdutoParaExcluir({ ...p, id: Number(p.id) });
+    setShowDeleteModal(true);
+  };
+
+  const confirmarExclusao = async () => {
+    if (!produtoParaExcluir) return;
+    try {
+      await api.delete(`/produtos/${Number(produtoParaExcluir.id)}`);
+      setShowDeleteModal(false);
+      setProdutoParaExcluir(null);
+      carregarDados();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // --- CARRINHO ---
+  const addToCart = (produto: Partial<Produto>) => {
+    setCart((prev) => {
+      const existing = prev.find((i) => i.produto.id === Number(produto.id));
+      if (existing)
+        return prev.map((i) =>
+          i.produto.id === Number(produto.id) ? { ...i, quantidade: i.quantidade + 1 } : i
+        );
+      return [...prev, { produto, quantidade: 1, idUnico: Math.random().toString(36).substr(2, 9) }];
+    });
+  };
+
+  const removeFromCart = (id: number) => {
+    setCart((prev) => {
+      const item = prev.find((i) => i.produto.id === Number(id));
+      if (item && item.quantidade > 1)
+        return prev.map((i) =>
+          i.produto.id === Number(id) ? { ...i, quantidade: i.quantidade - 1 } : i
+        );
+      return prev.filter((i) => i.produto.id !== Number(id));
+    });
+  };
+
+  const removeItemTotal = (idUnico: string) => {
+    setCart((prev) => prev.filter((i) => i.idUnico !== idUnico));
+  };
+
+  const getQtdCarrinho = (id: number) =>
+    cart.find((i) => i.produto.id === Number(id))?.quantidade || 0;
+
+  // --- LOGICA DE FECHAMENTO ---
+  const getUsuarioIdDoToken = (): string | null => {
+    try {
+      const token = localStorage.getItem('@ByteToBite:token');
+      if (!token) return null;
+      const payload = token.split('.')[1];
+      const decoded = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+      return decoded.sub ?? decoded.id ?? decoded.usuarioId ?? null;
+    } catch {
+      return null;
+    }
+  };
+
+ const imprimirRecibo = () => {
+  setTimeout(() => {
+    window.print();
+    setComprovante(null); // Fecha o modal após imprimir ou cancelar// 
+    }, 500);
+  };
+
+  const finalizarPedido = async () => {
+  if (!nomeCliente.trim()) return alert('Informe o nome do cliente.');
+  if (cart.length === 0) return alert('Carrinho vazio.');
+
+  const usuarioId = getUsuarioIdDoToken();
+  if (!usuarioId) return alert('Sessão expirada. Faça login novamente.');
+
+  setFinalizando(true);
+  try {
+    const payload = {
+      usuarioId,
+      nomeCliente: nomeCliente.trim(),
+      tipoPedido,
+      precoTotal: totalPreco,
+      status: 'EM_PREPARO',
+      pagamento: formaPagamento,
+      itens: cart.map((i) => ({
+        produtoId: Number(i.produto.id),
+        quantidade: i.quantidade,
+        precoDaUnidade: Number(i.produto.preco)
+      })),
+      retirada: tipoPedido === 'RETIRADA' ? 'SIM' : 'NAO',
+      // Endereço ocultado se não for ENTREGA
+      ...(tipoPedido === 'ENTREGA' && {
+        endereco: { rua, numeroDaCasa: numero, bairro, cidade }
+      })
+    };
+
+    // Salva no Banco de Dados (isso alimentará automaticamente a SalesView)
+    const res = await api.post('/pedidos', payload);
+    
+    const dadosRecibo = {
+      id: res.data.id,
+      cliente: nomeCliente,
+      data: new Date().toLocaleString('pt-BR'),
+      itens: [...cart],
+      total: totalPreco,
+      tipoPedido,
+      pagamento: formaPagamento,
+    };
+
+    setComprovante(dadosRecibo);
+    setCart([]);
+    setShowCheckout(false);
+    setNomeCliente('');
+    
+    // Chama a impressão automática
+    imprimirRecibo();
+
+  } catch (err) {
+    console.error(err);
+    alert('Erro ao finalizar pedido.');
+  } finally {
+    setFinalizando(false);
+  }
+};
+
   return (
-    <div className="p-stack-lg space-y-stack-lg pb-24">
-      <section>
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-2xl font-black text-on-surface">Lista de pedidos</h2>
-          <span className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">
-            {products.length} Itens sincronizados
-          </span>
-        </div>
+    <div className="p-8 bg-[#FDF2F0] min-h-screen pb-40 font-sans">
+      <header className="flex justify-between mb-8 items-center">
+        <h2 className="text-3xl font-black text-[#2D1B18]">Cardápio Digital</h2>
+        <button
+          onClick={() => { fecharModalCadastro(); setShowCadastroModal(true); }}
+          className="bg-[#ac2d00] text-white px-8 py-4 rounded-2xl font-black shadow-lg hover:scale-105 transition-transform"
+        >
+          + NOVO LANCHE
+        </button>
+      </header>
 
-        {loading ? (
-          <div className="text-center py-20 font-bold text-on-surface-variant">Carregando lista de pedidos...</div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-gutter">
-            {products.map((product, idx) => (
-              <ProductCard
-  key={product.id}
-  product={product}
-  index={idx}
-  cartQty={cart.find(i => i.produto.id === product.id)?.quantidade || 0}
-  onAdd={() => addToCart(product)}
-  onRemove={() => removeFromCart(product.id)}
-/>
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* Barra de Pedido inferior - Estática conforme design */}
-      {/* Barra de Pedido inferior */}
-<motion.div initial={{ y: 100 }} animate={{ y: 0 }} className="fixed bottom-6 left-70 right-6 z-50 pointer-events-none">
-  <div className="max-w-4xl mx-auto bg-sidebar-bg text-white rounded-2xl shadow-2xl p-4 flex items-center justify-between border border-white/10 pointer-events-auto">
-    <div className="flex items-center gap-6">
-      <div className="flex items-center gap-3">
-        <div className="relative">
-          <span className="material-symbols-outlined text-3xl">shopping_cart</span>
-          {totalItens > 0 && (
-            <span className="absolute -top-2 -right-2 bg-sidebar-active text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center">
-              {totalItens}
-            </span>
-          )}
-        </div>
-        <div>
-          <p className="text-sm font-bold">Pedido</p>
-          <p className="text-[10px] text-sidebar-text font-bold uppercase">
-            {totalItens === 0
-              ? 'Selecione itens para iniciar'
-              : `${totalItens} ${totalItens === 1 ? 'item' : 'itens'} — ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalPreco)}`
-            }
-          </p>
-        </div>
-      </div>
-    </div>
-    <button
-      onClick={() => totalItens > 0 && setShowCheckout(true)}
-      className={`px-8 py-3 font-black text-sm rounded-xl shadow-lg transition-all active:scale-95 flex items-center gap-2 ${totalItens > 0 ? 'bg-sidebar-active text-white' : 'bg-white/10 text-white/40 cursor-not-allowed'}`}
-    >
-      FINALIZAR PEDIDO
-      <span className="material-symbols-outlined">chevron_right</span>
-    </button>
-  </div>
-</motion.div>
-
-{/* Modal de Checkout */}
-<AnimatePresence>
-  {showCheckout && (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm p-4">
-      <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
-        className="bg-white rounded-3xl shadow-2xl w-full max-w-lg border border-[#FFCCBC] overflow-hidden">
-
-        {sucesso ? (
-          <div className="p-12 flex flex-col items-center justify-center text-center">
-            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 200 }}
-              className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-4">
-              <span className="material-symbols-outlined text-green-600 text-5xl">check_circle</span>
-            </motion.div>
-            <h3 className="text-2xl font-black text-on-surface">Pedido Criado!</h3>
-            <p className="text-on-surface-variant font-medium mt-2">Seu pedido foi enviado para a cozinha.</p>
-          </div>
-        ) : (
-          <>
-            <div className="p-6 border-b border-[#FFCCBC] flex justify-between items-center">
-              <h3 className="text-xl font-black text-on-surface">Finalizar Pedido</h3>
-              <button onClick={() => setShowCheckout(false)} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-on-surface/5">
-                <span className="material-symbols-outlined text-on-surface-variant">close</span>
-              </button>
-            </div>
-
-            <div className="p-6 space-y-6 max-h-[60vh] overflow-y-auto">
-              <div>
-                <p className="text-[10px] font-black text-on-surface-variant uppercase tracking-widest mb-3">Resumo</p>
-                {cart.map(item => (
-                  <div key={item.produto.id} className="flex justify-between items-center py-2 border-b border-on-surface/5">
-                    <span className="text-sm font-bold text-on-surface"><strong className="text-primary">{item.quantidade}x</strong> {item.produto.nome}</span>
-                    <span className="text-sm font-black text-on-surface">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(item.produto.preco) * item.quantidade)}</span>
-                  </div>
-                ))}
-                <div className="flex justify-between items-center pt-3">
-                  <span className="font-black text-on-surface uppercase text-sm">Total</span>
-                  <span className="font-black text-primary text-lg">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalPreco)}</span>
-                </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {products.map((p) => {
+          const qtd = getQtdCarrinho(p.id);
+          return (
+            <div key={p.id} className="bg-white rounded-[32px] overflow-hidden shadow-sm border border-orange-100 flex flex-col group relative">
+              <div className="absolute top-3 left-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                <button
+                  onClick={(e) => { e.stopPropagation(); abrirEdicao(p); }}
+                  className="bg-white/90 p-2 rounded-full text-blue-600 shadow"
+                >
+                  <span className="material-symbols-outlined text-sm">edit</span>
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); abrirDeleteModal(p); }}
+                  className="bg-white/90 p-2 rounded-full text-red-600 shadow"
+                >
+                  <span className="material-symbols-outlined text-sm">delete</span>
+                </button>
               </div>
 
-              <div>
-                <p className="text-[10px] font-black text-on-surface-variant uppercase tracking-widest mb-3">Endereço de Entrega</p>
-                {enderecos.length > 0 && !showNovoEndereco ? (
-                  <div className="space-y-2">
-                    {enderecos.map(end => (
-                      <label key={end.id} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${enderecoSelecionado === end.id ? 'border-primary bg-primary/5' : 'border-on-surface/10'}`}>
-                        <input type="radio" name="endereco" value={end.id} checked={enderecoSelecionado === end.id} onChange={() => setEnderecoSelecionado(end.id)} className="accent-primary" />
-                        <span className="text-sm font-bold text-on-surface">{end.rua}, {end.numeroDaCasa} — {end.bairro}, {end.cidade}</span>
-                      </label>
-                    ))}
-                    <button onClick={() => setShowNovoEndereco(true)} className="text-xs font-black text-primary uppercase tracking-widest mt-1 hover:underline">+ Usar outro endereço</button>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {enderecos.length > 0 && <button onClick={() => setShowNovoEndereco(false)} className="text-xs font-black text-primary uppercase tracking-widest hover:underline">← Usar endereço salvo</button>}
-                    <div className="grid grid-cols-2 gap-3">
-                      <input placeholder="Rua" value={novoRua} onChange={e => setNovoRua(e.target.value)} className="col-span-2 p-3 bg-on-surface/5 border border-on-surface/10 rounded-xl outline-none focus:border-primary text-on-surface font-bold text-sm" />
-                      <input placeholder="Número" value={novoNumero} onChange={e => setNovoNumero(e.target.value)} className="p-3 bg-on-surface/5 border border-on-surface/10 rounded-xl outline-none focus:border-primary text-on-surface font-bold text-sm" />
-                      <input placeholder="Bairro" value={novoBairro} onChange={e => setNovoBairro(e.target.value)} className="p-3 bg-on-surface/5 border border-on-surface/10 rounded-xl outline-none focus:border-primary text-on-surface font-bold text-sm" />
-                      <input placeholder="Cidade" value={novoCidade} onChange={e => setNovoCidade(e.target.value)} className="col-span-2 p-3 bg-on-surface/5 border border-on-surface/10 rounded-xl outline-none focus:border-primary text-on-surface font-bold text-sm" />
+              <div className="h-48 bg-gray-200">
+                <img
+                  src={p.imagemUrl || 'https://placehold.co/400x300'}
+                  className="w-full h-full object-cover"
+                  alt={p.nome}
+                />
+              </div>
+
+              <div className="p-6 flex flex-col flex-1">
+                <div className="flex justify-between items-start">
+                  <h3 className="font-black text-[#2D1B18] text-xl">{p.nome}</h3>
+                  <span className="font-black text-[#ac2d00]">R$ {Number(p.preco).toFixed(2)}</span>
+                </div>
+                <p className="text-gray-400 text-xs mt-2 line-clamp-2">{p.descricao}</p>
+
+                <div className="mt-auto pt-6">
+                  {qtd > 0 ? (
+                    <div className="flex items-center justify-between bg-[#ac2d00] rounded-2xl p-1 text-white shadow-md">
+                      <button onClick={() => removeFromCart(p.id)} className="w-10 h-10 font-bold text-xl">－</button>
+                      <span className="text-[11px] font-black uppercase">{qtd} no pedido</span>
+                      <button onClick={() => addToCart(p)} className="w-10 h-10 font-bold text-xl">＋</button>
                     </div>
+                  ) : (
+                    <button
+                      onClick={() => addToCart(p)}
+                      className="w-full py-4 bg-[#E2EEF5] text-[#ac2d00] font-black rounded-2xl flex items-center justify-center gap-2 uppercase text-[10px]"
+                    >
+                      <span className="material-symbols-outlined text-lg">add_shopping_cart</span> ADICIONAR
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {cart.length > 0 && (
+        <motion.div
+          initial={{ y: 100 }}
+          animate={{ y: 0 }}
+          className="fixed bottom-8 left-1/2 -translate-x-1/2 w-[90%] max-w-4xl bg-[#2D1B18] rounded-[32px] p-6 flex justify-between items-center shadow-2xl z-50 border-b-8 border-[#ac2d00]"
+        >
+          <div className="text-white">
+            <p className="text-[10px] font-black text-gray-400 uppercase">Subtotal ({totalItens} itens)</p>
+            <p className="text-2xl font-black italic">R$ {totalPreco.toFixed(2)}</p>
+          </div>
+          <button
+            onClick={() => setShowCheckout(true)}
+            className="bg-[#FF6D33] text-white px-12 py-5 rounded-2xl font-black uppercase text-xs shadow-lg"
+          >
+            FECHAR PEDIDO
+          </button>
+        </motion.div>
+      )}
+
+      <AnimatePresence>
+        {showCheckout && (
+          <div className="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
+            <motion.div
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              className="bg-white rounded-[40px] w-full max-w-2xl flex flex-col max-h-[90vh]"
+            >
+              <div className="p-8 border-b flex justify-between items-center">
+                <h3 className="text-2xl font-black text-[#2D1B18] italic uppercase">Finalizar</h3>
+                <button onClick={() => setShowCheckout(false)} className="material-symbols-outlined text-gray-400">close</button>
+              </div>
+
+              <div className="p-8 overflow-y-auto space-y-8">
+                <div className="space-y-4">
+                  {cart.map((item) => (
+                    <div key={item.idUnico} className="flex justify-between items-center group">
+                      <div className="flex items-center gap-4">
+                        <button onClick={() => removeItemTotal(item.idUnico)} className="text-red-500 material-symbols-outlined text-lg opacity-0 group-hover:opacity-100">cancel</button>
+                        <span className="font-bold text-[#2D1B18]">{item.quantidade}x {item.produto.nome}</span>
+                      </div>
+                      <span className="font-black text-[#ac2d00]">R$ {(item.quantidade * Number(item.produto.preco)).toFixed(2)}</span>
+                    </div>
+                  ))}
+                  <div className="flex justify-between pt-2 border-t font-black text-lg">
+                    <span>Total</span>
+                    <span className="text-[#ac2d00]">R$ {totalPreco.toFixed(2)}</span>
+                  </div>
+                </div>
+
+                <div className="space-y-4 border-t pt-6">
+                  <input
+                    className="w-full p-4 bg-gray-100 rounded-2xl font-bold"
+                    placeholder="Nome do Cliente *"
+                    value={nomeCliente}
+                    onChange={(e) => setNomeCliente(e.target.value)}
+                  />
+
+                  <div className="grid grid-cols-3 gap-2">
+                    {(['LOCAL', 'RETIRADA', 'ENTREGA'] as const).map((t) => (
+                      <button
+                        key={t}
+                        onClick={() => setTipoPedido(t)}
+                        className={`py-4 rounded-2xl font-black text-[10px] border-2 ${tipoPedido === t ? 'bg-[#ac2d00] text-white' : 'bg-white text-gray-400'}`}
+                      >
+                        {t}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2">
+                    {(['PIX', 'CARTAO', 'DINHEIRO'] as const).map((f) => (
+                      <button
+                        key={f}
+                        onClick={() => setFormaPagamento(f)}
+                        className={`py-3 rounded-2xl font-black text-[10px] border-2 ${formaPagamento === f ? 'bg-[#2D1B18] text-white' : 'bg-white text-gray-400'}`}
+                      >
+                        {f}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {tipoPedido === 'ENTREGA' && (
+                  <div className="space-y-3 pt-2">
+                    <input className="w-full p-4 bg-gray-100 rounded-2xl font-bold" placeholder="Rua *" value={rua} onChange={(e) => setRua(e.target.value)} />
+                    <div className="grid grid-cols-2 gap-3">
+                      <input className="p-4 bg-gray-100 rounded-2xl font-bold" placeholder="Número *" value={numero} onChange={(e) => setNumero(e.target.value)} />
+                      <input className="p-4 bg-gray-100 rounded-2xl font-bold" placeholder="Bairro *" value={bairro} onChange={(e) => setBairro(e.target.value)} />
+                    </div>
+                    <input className="w-full p-4 bg-gray-100 rounded-2xl font-bold" placeholder="Cidade *" value={cidade} onChange={(e) => setCidade(e.target.value)} />
                   </div>
                 )}
               </div>
-            </div>
 
-            <div className="p-6 border-t border-[#FFCCBC] flex gap-4">
-              <button onClick={() => setShowCheckout(false)} className="flex-1 px-6 py-3 font-bold text-on-surface-variant hover:bg-on-surface/5 rounded-xl">Cancelar</button>
-              <button onClick={finalizarPedido} disabled={finalizando}
-                className="flex-1 bg-primary text-white px-6 py-3 rounded-xl font-black uppercase tracking-widest hover:brightness-110 active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2">
-                {finalizando
-                  ? <span className="material-symbols-outlined animate-spin text-sm">progress_activity</span>
-                  : <><span className="material-symbols-outlined text-sm">check</span>Confirmar</>
-                }
-              </button>
-            </div>
-          </>
+              <div className="p-8 border-t flex gap-4">
+                <button onClick={() => setShowCheckout(false)} className="px-6 py-5 font-black text-gray-400">VOLTAR</button>
+                <button
+                  onClick={finalizarPedido}
+                  disabled={finalizando}
+                  className="flex-1 bg-[#ac2d00] text-white py-5 rounded-2xl font-black uppercase text-xs disabled:opacity-60"
+                >
+                  {finalizando ? 'PROCESSANDO...' : 'CONFIRMAR PEDIDO'}
+                </button>
+              </div>
+            </motion.div>
+          </div>
         )}
-      </motion.div>
-    </motion.div>
-  )}
-</AnimatePresence>
+      </AnimatePresence>
+
+      {comprovante && (
+        <div className="fixed inset-0 bg-white z-[200] p-10 flex flex-col items-center overflow-y-auto">
+          <div className="w-full max-w-sm border-2 border-dashed border-gray-300 p-8 font-mono text-sm space-y-4">
+            <h2 className="text-center font-black text-xl">BYTE TO BITE</h2>
+            <div className="border-b py-2 flex justify-between">
+              <span>#{String(comprovante.id).slice(0, 8)}</span>
+              <span>{comprovante.data}</span>
+            </div>
+            <div className="font-bold">CLIENTE: {comprovante.cliente}</div>
+            <div className="space-y-1">
+              {comprovante.itens.map((i: CartItem) => (
+                <div key={i.idUnico} className="flex justify-between">
+                  <span>{i.quantidade}x {i.produto.nome}</span>
+                  <span>R$ {(i.quantidade * Number(i.produto.preco)).toFixed(2)}</span>
+                </div>
+              ))}
+            </div>
+            <div className="border-t pt-4 text-lg font-black flex justify-between uppercase">
+              <span>Total:</span>
+              <span>R$ {comprovante.total.toFixed(2)}</span>
+            </div>
+          </div>
+          <div className="flex gap-4 mt-8">
+            <button onClick={() => window.print()} className="bg-[#ac2d00] text-white px-8 py-4 rounded-xl font-black">IMPRIMIR</button>
+            <button onClick={() => setComprovante(null)} className="bg-[#2D1B18] text-white px-10 py-4 rounded-xl font-black">FECHAR</button>
+          </div>
+        </div>
+      )}
+
+      <AnimatePresence>
+        {showCadastroModal && (
+          <div className="fixed inset-0 bg-black/80 z-[120] flex items-center justify-center p-4">
+            <motion.div initial={{ y: 50 }} animate={{ y: 0 }} className="bg-white p-8 rounded-[40px] w-full max-w-3xl overflow-y-auto max-h-[90vh]">
+              <h3 className="text-2xl font-black italic mb-6">{editandoId ? 'EDITAR LANCHE' : 'CADASTRAR NO CARDÁPIO'}</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-4">
+                  <input className="w-full p-4 bg-gray-100 rounded-2xl font-bold" placeholder="Nome" value={novoNome} onChange={(e) => setNovoNome(e.target.value)} />
+                  <input className="w-full p-4 bg-gray-100 rounded-2xl font-bold" placeholder="Preço" type="number" step="0.01" value={novoPreco} onChange={(e) => setNovoPreco(e.target.value)} />
+                  <div className="relative w-full h-40 bg-gray-100 rounded-2xl border-2 border-dashed flex items-center justify-center overflow-hidden" onPaste={handleImageInput}>
+                    <input type="file" accept="image/*" onChange={handleImageInput} className="absolute inset-0 opacity-0 cursor-pointer z-10" />
+                    {previewImagem ? <img src={previewImagem} className="w-full h-full object-cover" alt="preview" /> : <p className="text-[10px] text-gray-400">Upload Imagem (1MB)</p>}
+                  </div>
+                  <input className="w-full p-3 bg-gray-100 rounded-xl font-bold text-sm" placeholder="Ou cole URL da imagem" value={novaImagemUrl} onChange={(e) => { setNovaImagemUrl(e.target.value); setImagemBase64(null); }} />
+                </div>
+                <div className="space-y-4">
+                  <textarea className="w-full p-4 bg-gray-100 rounded-2xl font-bold h-28 resize-none" placeholder="Descrição" value={novaDesc} onChange={(e) => setNovaDesc(e.target.value)} />
+                  <div className="flex flex-wrap gap-2 max-h-36 overflow-y-auto p-2 border rounded-2xl">
+                    {ingredientesDisponiveis.map((ing) => (
+                      <button
+                        key={ing.id}
+                        type="button"
+                        onClick={() => ingredientesSelecionados.includes(ing.id) ? setIngredientesSelecionados(prev => prev.filter(id => id !== ing.id)) : setIngredientesSelecionados([...ingredientesSelecionados, ing.id])}
+                        className={`px-3 py-2 rounded-xl text-[10px] font-black ${ingredientesSelecionados.includes(ing.id) ? 'bg-[#ac2d00] text-white' : 'bg-gray-100 text-gray-400'}`}
+                      >
+                        {ing.nome}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-4 pt-8">
+                <button onClick={fecharModalCadastro} className="flex-1 font-black text-gray-400 py-4">CANCELAR</button>
+                <button onClick={salvarOuAtualizarProduto} disabled={salvando} className="flex-1 py-5 bg-[#ac2d00] text-white rounded-2xl font-black uppercase text-xs">
+                  {salvando ? 'SALVANDO...' : (editandoId ? 'ATUALIZAR DADOS' : 'SALVAR')}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {showDeleteModal && produtoParaExcluir && (
+        <DeleteModal produto={produtoParaExcluir} onConfirm={confirmarExclusao} onCancel={() => setShowDeleteModal(false)} />
+      )}
     </div>
   );
 }
 
-function ProductCard({ product, index, cartQty, onAdd, onRemove }: { product: Produto; index: number; cartQty: number; onAdd: () => void; onRemove: () => void; }) {
-  return (
-    
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ delay: index * 0.05 }}
-      className="bg-white rounded-xl overflow-hidden shadow-sm border border-on-surface/5 hover:shadow-md transition-all group flex flex-col"
-    >
-      <div className="relative h-48 w-full overflow-hidden">
-        <img 
-          className="w-full h-full object-cover transition-transform group-hover:scale-105" 
-          src={product.imagemUrl || 'https://via.placeholder.com/150'} 
-          alt={product.nome}
-        />
-      </div>
-      <div className="p-stack-md flex flex-col flex-1">
-        <div className="flex justify-between items-start mb-2">
-          <h3 className="text-lg font-black leading-tight text-on-surface">{product.nome}</h3>
-          <span className="text-sm font-black text-primary">
-            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(product.preco))}
-          </span>
-        </div>
-        <p className="text-xs text-on-surface-variant font-medium mb-6 line-clamp-2">
-          {product.descricao}
-        </p>
-       {cartQty === 0 ? (
-  <button onClick={onAdd} className="w-full mt-auto py-3 bg-surface-container text-primary font-black text-xs rounded-lg hover:bg-primary hover:text-white transition-colors flex items-center justify-center gap-2 tracking-widest">
-    <span className="material-symbols-outlined text-lg">add_circle</span>
-    ADICIONAR
-  </button>
-) : (
-  <div className="w-full mt-auto flex items-center justify-between bg-primary rounded-lg overflow-hidden">
-    <button onClick={onRemove} className="px-4 py-3 text-white font-black hover:bg-black/10 transition-colors">
-      <span className="material-symbols-outlined text-lg">remove</span>
-    </button>
-    <span className="text-white font-black text-sm">{cartQty} no carrinho</span>
-    <button onClick={onAdd} className="px-4 py-3 text-white font-black hover:bg-black/10 transition-colors">
-      <span className="material-symbols-outlined text-lg">add</span>
-    </button>
-  </div>
-)}
-      </div>
-    </motion.div>
-  );
+function imprimirRecibo() {
+  throw new Error('Function not implemented.');
 }
