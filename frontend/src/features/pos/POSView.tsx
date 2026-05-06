@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useEffect, useState } from 'react';
 import { api } from '../../services/api';
 import type { Produto, Ingrediente } from '../../types/types';
+import { useSales } from '../../features/sales/SalesContext';
 
 interface CartItem {
   produto: Partial<Produto>;
@@ -78,6 +79,9 @@ export function POSView() {
   const [ingredientesSelecionados, setIngredientesSelecionados] = useState<number[]>([]);
   const [salvando, setSalvando] = useState(false);
 
+  // --- INTEGRAÇÃO COM SALESCONTEXT ---
+  const { registrarVenda } = useSales();
+
   const totalPreco = cart.reduce((acc, i) => acc + (Number(i.produto.preco) * i.quantidade), 0);
   const totalItens = cart.reduce((acc, i) => acc + i.quantidade, 0);
 
@@ -128,37 +132,37 @@ export function POSView() {
   const previewImagem = imagemBase64 || novaImagemUrl;
 
   // --- LOGICA DE ATUALIZAÇÃO ---
+  // POSView.tsx
+
 const salvarOuAtualizarProduto = async () => {
-  if (!novoNome || !novoPreco) return alert('Nome e preço são obrigatórios!');
+  if (!novoNome || !novoPreco) return alert('Preencha os campos obrigatórios!');
 
   setSalvando(true);
   try {
-    const imagemFinal = imagemBase64 || novaImagemUrl || null;
-
-    const dados: any = {
+    const dadosParaEnvio = {
       nome: novoNome,
-      preco: Number(novoPreco),
-      descricao: novaDesc || '',
-      estoque: 999,
+      preco: parseFloat(novoPreco), // Garante que é número
+      descricao: novaDesc,
+      estoque: 999, // Valor padrão ou do estado
       tempoProducao: 15,
-      // Enviamos apenas o Array de números para o loop do backend[cite: 5]
-      ingredientes: ingredientesSelecionados.map((id) => Number(id)),
+      imagemUrl: imagemBase64 || novaImagemUrl || null,
+      // Garante que enviamos um array de números puros[cite: 12]
+      ingredientes: ingredientesSelecionados.map(id => Number(id))
     };
 
-    if (imagemFinal) dados.imagemUrl = imagemFinal;
-
     if (editandoId) {
-      await api.put(`/produtos/${Number(editandoId)}`, dados);
+      await api.put(`/produtos/${editandoId}`, dadosParaEnvio);
+      alert('Produto atualizado!');
     } else {
-      await api.post('/produtos', dados);
+      await api.post('/produtos', dadosParaEnvio);
+      alert('Produto criado!');
     }
-    
-    carregarDados();
+
     fecharModalCadastro();
-    alert('Produto salvo com sucesso!');
+    await carregarDados(); // Atualiza a lista na tela
   } catch (err: any) {
-    console.error('Erro detalhado:', err.response?.data || err.message);
-    alert(`Erro ao salvar: ${err.response?.data?.message || 'Verifique os campos'}`);
+    console.error("Erro detalhado:", err.response?.data || err.message);
+    alert("Erro ao salvar produto. Verifique o console.");
   } finally {
     setSalvando(false);
   }
@@ -177,20 +181,34 @@ const salvarOuAtualizarProduto = async () => {
   };
 
   const abrirEdicao = (p: Produto) => {
-    setEditandoId(Number(p.id));
-    setNovoNome(p.nome);
-    setNovoPreco(String(p.preco));
-    setNovaDesc(p.descricao || '');
-    if (p.imagemUrl && !p.imagemUrl.startsWith('data:')) {
-      setNovaImagemUrl(p.imagemUrl);
-      setImagemBase64(null);
-    } else {
-      setImagemBase64(p.imagemUrl || null);
-      setNovaImagemUrl('');
-    }
-    setIngredientesSelecionados(p.ingredientes?.map((i: any) => i.ingredienteId ?? i.id) ?? []);
-    setShowCadastroModal(true);
-  };
+  // 1. Define o ID como número
+  setEditandoId(Number(p.id));
+  
+  // 2. Preenche os campos básicos
+  setNovoNome(p.nome);
+  setNovoPreco(String(p.preco));
+  setNovaDesc(p.descricao || '');
+
+  // 3. Trata a imagem (se for URL ou Base64)
+  if (p.imagemUrl && !p.imagemUrl.startsWith('data:')) {
+    setNovaImagemUrl(p.imagemUrl);
+    setImagemBase64(null);
+  } else {
+    setImagemBase64(p.imagemUrl || null);
+    setNovaImagemUrl('');
+  }
+
+  // 4. Lógica para capturar IDs de ingredientes de diferentes formatos da API
+  const ings = p.ingredientes ?? [];
+  const ids = ings.map((i: any) => {
+    if (typeof i === 'number') return i;
+    // Tenta pegar o ID de dentro da relação do Prisma[cite: 12]
+    return Number(i.ingredienteId ?? i.id ?? i.ingrediente?.id ?? 0);
+  }).filter((id: number) => id > 0);
+
+  setIngredientesSelecionados(ids);
+  setShowCadastroModal(true);
+};
 
   const abrirDeleteModal = (p: Produto) => {
     setProdutoParaExcluir({ ...p, id: Number(p.id) });
@@ -252,15 +270,14 @@ const salvarOuAtualizarProduto = async () => {
     }
   };
 
- const imprimirRecibo = () => {
-  setTimeout(() => {
-    window.print();
-    setComprovante(null); // Fecha o modal após imprimir ou cancelar// 
+  const imprimirRecibo = () => {
+    setTimeout(() => {
+      window.print();
+      setComprovante(null);
     }, 500);
   };
 
   const finalizarPedido = async () => {
-    // 1. Validações básicas
     if (!nomeCliente.trim()) return alert('O nome do cliente é obrigatório.');
     if (cart.length === 0) return alert('O carrinho não pode estar vazio.');
 
@@ -274,7 +291,6 @@ const salvarOuAtualizarProduto = async () => {
 
     setFinalizando(true);
     try {
-      // 2. Se for entrega, cria o endereço primeiro e obtém o enderecoId
       let enderecoId: string | null = null;
       if (tipoPedido === 'ENTREGA') {
         const enderecoRes = await api.post('/enderecos', {
@@ -287,15 +303,14 @@ const salvarOuAtualizarProduto = async () => {
         enderecoId = enderecoRes.data.id;
       }
 
-      // 3. Monta o payload conforme o schema do Prisma (model Pedido)
       const payload: any = {
-        nomeCliente,           // campo extra aceito pelo backend para exibição
+        nomeCliente,
         usuarioId,
         retirada: tipoPedido === 'RETIRADA' ? 'SIM' : 'NAO',
         precoTotal: Number(totalPreco),
         status: 'EM_PREPARO',
         pagamento: formaPagamento,
-        enderecoId,            // null se LOCAL/RETIRADA, UUID se ENTREGA
+        enderecoId,
         itens: cart.map((i) => ({
           produtoId: Number(i.produto.id),
           quantidade: i.quantidade,
@@ -303,10 +318,23 @@ const salvarOuAtualizarProduto = async () => {
         })),
       };
 
-      // 4. Cria o pedido
       const response = await api.post('/pedidos', payload);
 
-      // 5. Exibe comprovante e limpa o estado
+      // --- REGISTRA A VENDA NO CONTEXTO COMPARTILHADO ---
+      registrarVenda({
+        id: response.data.id,
+        total: totalPreco,
+        pagamento: formaPagamento,
+        hora: new Date(),
+        itens: cart.map((i) => ({
+          produtoId: Number(i.produto.id),
+          nome: i.produto.nome ?? '',
+          quantidade: i.quantidade,
+          precoDaUnidade: Number(i.produto.preco),
+          imagemUrl: i.produto.imagemUrl,
+        })),
+      });
+
       setComprovante({
         id: response.data.id,
         cliente: nomeCliente,
@@ -535,7 +563,7 @@ const salvarOuAtualizarProduto = async () => {
             </div>
           </div>
           <div className="flex gap-4 mt-8">
-            <button onClick={() => window.print()} className="bg-[#ac2d00] text-white px-8 py-4 rounded-xl font-black">IMPRIMIR</button>
+            <button onClick={imprimirRecibo} className="bg-[#ac2d00] text-white px-8 py-4 rounded-xl font-black">IMPRIMIR</button>
             <button onClick={() => setComprovante(null)} className="bg-[#2D1B18] text-white px-10 py-4 rounded-xl font-black">FECHAR</button>
           </div>
         </div>
@@ -588,8 +616,4 @@ const salvarOuAtualizarProduto = async () => {
       )}
     </div>
   );
-}
-
-function imprimirRecibo() {
-  throw new Error('Function not implemented.');
 }

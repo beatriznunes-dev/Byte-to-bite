@@ -109,7 +109,6 @@ export function StockView() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-gutter">
         <StatCard label="Total de Itens" value={totalItens.toString()} icon="inventory_2" color="#ac2d00" />
         <StatCard label="Estoque Baixo" value={estoqueBaixo.toString()} icon="warning" color="#ba1a1a" isError={estoqueBaixo > 0} />
-        <StatCard label="Valor em Estoque" value="R$ --" icon="payments" color="#745853" />
       </div>
 
       {/* TABELA */}
