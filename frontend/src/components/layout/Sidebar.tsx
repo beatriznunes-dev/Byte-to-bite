@@ -12,7 +12,6 @@ const NAV_ITEMS = [
   { id: 'pos' as ViewType, label: 'Pedidos', icon: 'receipt_long' },
   { id: 'stock' as ViewType, label: 'Estoque', icon: 'inventory_2' },
   { id: 'sales' as ViewType, label: 'Vendas', icon: 'analytics' },
-  { id: 'settings' as ViewType, label: 'Configurações', icon: 'settings' },
 ];
 
 export function Sidebar({ currentView, onViewChange, isMobileOpen, onMobileClose }: SidebarProps) {

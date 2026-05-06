@@ -82,24 +82,10 @@ export function Header({ currentView, onMenuClick }: HeaderProps) {
             </div>
 
             <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-2xl border border-on-surface/10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all py-2 z-50 transform origin-top-right">
-              <button className="w-full text-left px-4 py-3 text-sm font-medium hover:bg-on-surface/5 transition-colors text-on-surface flex items-center gap-2">
-                <span className="material-symbols-outlined text-sm">
-                  person
-                </span>
-                Perfil
-              </button>
-              <button className="w-full text-left px-4 py-3 text-sm font-medium hover:bg-on-surface/5 transition-colors text-on-surface flex items-center gap-2">
-                <span className="material-symbols-outlined text-sm">
-                  notifications
-                </span>
-                Notificações
-              </button>
-
-              <hr className="my-1 border-on-surface/5" />
 
               <button
                 onClick={handleLogout}
-                className="w-full text-left px-4 py-3 text-sm text-red-600 font-bold hover:bg-red-50 transition-colors flex items-center gap-2"
+                className="w-full text-left px-4 py-3 text-sm text-red-600 font-bold hover:bg-red-50 rounded-xl transition-colors flex items-center gap-2"
               >
                 <span className="material-symbols-outlined text-sm">
                   logout

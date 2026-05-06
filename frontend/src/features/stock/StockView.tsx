@@ -53,33 +53,54 @@ export function StockView() {
     setActiveMenuId(null);
   }
 
-  async function handleSaveInsumo(e: React.FormEvent) {
-    e.preventDefault();
-    try {
-      const payload = { nome: novoNome, estoque: Number(novaQtd) };
-      if (editingId) {
-        await api.put(`/ingredientes/${editingId}`, payload);
-      } else {
-        await api.post('/ingredientes', payload);
-      }
-      setIsModalOpen(false);
-      loadStock(); 
-    } catch  {
+  // Substitua no seu StockView.tsx
+async function handleSaveInsumo(e: React.FormEvent) {
+  e.preventDefault();
+  try {
+    const token = localStorage.getItem('@ByteToBite:token'); // Pega o token salvo
+    
+    const payload = { 
+      nome: novoNome, 
+      estoque: Number(novaQtd) 
+    };
+
+    const config = {
+      headers: { Authorization: `Bearer ${token}` } // Adiciona o crachá de ADMIN
+    };
+
+    if (editingId) {
+      await api.put(`/ingredientes/${editingId}`, payload, config);
+    } else {
+      await api.post('/ingredientes', payload, config);
+    }
+    
+    setIsModalOpen(false);
+    loadStock(); 
+  } catch (error: any) {
+    if (error.response?.status === 403) {
+      alert("Acesso negado: Você precisa ser ADMIN para alterar o estoque.");
+    } else {
       alert("Erro na operação.");
     }
   }
+}
 
-  async function confirmDelete() {
-    if (!itemToDelete) return;
-    try {
-      await api.delete(`/ingredientes/${itemToDelete.id}`);
-      setIsDeleteModalOpen(false);
-      setItemToDelete(null);
-      loadStock();
-    } catch  {
-      alert("Erro ao excluir insumo.");
-    }
+async function confirmDelete() {
+  if (!itemToDelete) return;
+  try {
+    const token = localStorage.getItem('@ByteToBite:token');
+    
+    await api.delete(`/ingredientes/${itemToDelete.id}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    setIsDeleteModalOpen(false);
+    setItemToDelete(null);
+    loadStock();
+  } catch {
+    alert("Erro ao excluir insumo.");
   }
+}
 
   const totalItens = items.length;
   const estoqueBaixo = items.filter(item => (item.estoque || 0) < 5).length;
