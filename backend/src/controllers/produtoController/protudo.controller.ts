@@ -69,6 +69,7 @@ export class ProdutoController {
       estoque?: number;
       imagemUrl?: string;
       tempoProducao?: number;
+      ingredientes?: { ingredienteId: number; quantidade: number }[];
     };
 
     const service = new UpdateProdutoService();

@@ -8,6 +8,7 @@ interface UpdateProdutoDTO {
   estoque?: number;
   imagemUrl?: string;
   tempoProducao?: number;
+  ingredientes?: { ingredienteId: number; quantidade: number }[];
 }
 
 export class UpdateProdutoService {
