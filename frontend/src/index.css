@@ -72,3 +72,7 @@ input::-webkit-credentials-auto-fill-button {
   display: none !important;
   pointer-events: none;
 }
+
+button {
+  cursor: pointer;
+}
