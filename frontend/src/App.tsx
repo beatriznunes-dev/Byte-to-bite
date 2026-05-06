@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Sidebar } from './components/layout/Sidebar';
 import { Header } from './components/layout/Header';
@@ -12,18 +12,20 @@ import type { ViewType } from './types/types';
 export default function App() {
   const [currentView, setCurrentView] = useState<ViewType>('kds');
   // Estado para controlar se o usuário está autenticado
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  useEffect(() => {
-    // Verifica se existe o token ao carregar o app
-    const token = localStorage.getItem('@ByteToBite:token');
-    setIsAuthenticated(!!token);
-  }, []);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+  return !!localStorage.getItem('@ByteToBite:token');
+});
+const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Se não estiver logado, mostra apenas a tela de login
   if (!isAuthenticated) {
     return <LoginView onLoginSuccess={() => setIsAuthenticated(true)} />;
   }
+
+  function handleViewChange(view: ViewType) {
+  setCurrentView(view);
+  setIsMobileMenuOpen(false);
+}
 
   const renderView = () => {
     switch (currentView) {
@@ -47,9 +49,20 @@ export default function App() {
 
   return (
     <div className="flex min-h-screen bg-background">
-      <Sidebar currentView={currentView} onViewChange={setCurrentView} />
-      <div className="flex-1 ml-64 flex flex-col min-h-screen">
-        <Header currentView={currentView} />
+      {isMobileMenuOpen && (
+  <div
+    className="fixed inset-0 bg-black/50 z-40 md:hidden"
+    onClick={() => setIsMobileMenuOpen(false)}
+  />
+)}
+      <Sidebar
+  currentView={currentView}
+  onViewChange={handleViewChange}
+  isMobileOpen={isMobileMenuOpen}
+  onMobileClose={() => setIsMobileMenuOpen(false)}
+/>
+      <div className="flex-1 md:ml-64 flex flex-col min-h-screen">
+        <Header currentView={currentView} onMenuClick={() => setIsMobileMenuOpen(true)} />
         <main className="flex-1 overflow-x-hidden">
           <AnimatePresence mode="wait">
             <motion.div

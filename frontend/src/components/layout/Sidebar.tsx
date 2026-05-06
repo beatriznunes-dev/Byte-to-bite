@@ -3,6 +3,8 @@ import type { ViewType } from '../../types/types';
 interface SidebarProps {
   currentView: ViewType;
   onViewChange: (view: ViewType) => void;
+  isMobileOpen: boolean;
+  onMobileClose: () => void;
 }
 
 const NAV_ITEMS = [
@@ -13,12 +15,15 @@ const NAV_ITEMS = [
   { id: 'settings' as ViewType, label: 'Configurações', icon: 'settings' },
 ];
 
-export function Sidebar({ currentView, onViewChange }: SidebarProps) {
+export function Sidebar({ currentView, onViewChange, isMobileOpen, onMobileClose }: SidebarProps) {
   return (
-    <aside className="h-screen w-64 fixed left-0 top-0 bg-sidebar-bg flex flex-col py-6 z-50 border-r border-[#FFCCBC]">
-      <div className="px-6 mb-10">
-        <h1 className="text-xl font-black text-sidebar-active tracking-tighter">FastFood Ops</h1>
-      </div>
+    <aside className={`h-screen w-64 fixed left-0 top-0 bg-sidebar-bg flex flex-col py-6 z-50 border-r border-[#FFCCBC] transition-transform duration-300 ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}>
+      <div className="px-6 mb-10 flex items-center justify-between">
+  <h1 className="text-xl font-black text-sidebar-active tracking-tighter">FastFood Ops</h1>
+  <button onClick={onMobileClose} className="md:hidden text-sidebar-text hover:text-white">
+    <span className="material-symbols-outlined">close</span>
+  </button>
+</div>
       
       <nav className="flex-1 space-y-1">
         {NAV_ITEMS.map((item) => (
