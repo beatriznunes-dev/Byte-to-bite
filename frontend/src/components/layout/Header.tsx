@@ -52,9 +52,6 @@ export function Header({ currentView, onMenuClick }: HeaderProps) {
           >
             <span className="material-symbols-outlined text-primary">menu</span>
           </button>
-          <button className="hidden md:flex hover:bg-on-surface/5 rounded-full p-2 transition-all">
-            <span className="material-symbols-outlined text-primary">menu</span>
-          </button>
           <div>
             <h2 className="text-lg font-bold text-on-surface">
               Painel Operacional
