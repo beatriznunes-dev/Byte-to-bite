@@ -1,5 +1,5 @@
 import { api } from './api';
-import type { Pedido, StatusPedido, ItemPedido } from '../types/types';
+import type { Pedido, StatusPedido} from '../types/types';
 
 // Interface para os dados necessários na criação de um pedido
 interface CreatePedidoDTO {
