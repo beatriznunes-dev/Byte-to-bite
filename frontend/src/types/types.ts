@@ -12,9 +12,18 @@ export interface Ingrediente {
   createdAt?: string;
 }
 
+// Interface para a relação Muitos-para-Muitos entre Produto e Ingrediente
+export interface ProdutoIngrediente {
+  id: number;
+  produtoId: number;
+  ingredienteId: number;
+  ingrediente?: Ingrediente; // Carregamento opcional do objeto do ingrediente
+}
+
 export interface Produto {
-  ingredientes: any;
-  isPopular: import("react/jsx-runtime").JSX.Element;
+  ingredientes: ProdutoIngrediente[]; 
+  // Removido import de JSX do runtime (propriedades de estado visual devem ser booleanas)
+  isPopular: boolean; 
   id: number;
   nome: string;
   descricao: string;
@@ -44,7 +53,8 @@ export interface ItemPedido {
   produtoId: number;
   precoDaUnidade: number;
   quantidade: number;
-  produto?: Produto; 
+  produto?: Produto;
+  observacao?: string; // Adicionado campo comum em itens de pedido
 }
 
 export type ViewType = 'kds' | 'pos' | 'sales' | 'stock' | 'settings';

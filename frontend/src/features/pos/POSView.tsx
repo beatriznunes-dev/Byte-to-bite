@@ -1,13 +1,43 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { useEffect, useState } from 'react';
 import { api } from '../../services/api';
-import type { Produto, Ingrediente } from '../../types/types';
+import type { Produto, Ingrediente, MetodoPagamento, StatusPedido } from '../../types/types';
 import { useSales } from '../../features/sales/SalesContext';
+import { AxiosError } from 'axios';
 
 interface CartItem {
   produto: Partial<Produto>;
   quantidade: number;
   idUnico: string;
+}
+
+interface ComprovanteData {
+  id: string | number;
+  cliente: string;
+  data: string;
+  itens: CartItem[];
+  total: number;
+  tipoPedido: 'LOCAL' | 'RETIRADA' | 'ENTREGA';
+  pagamento: MetodoPagamento;
+}
+
+interface JWTPayload {
+  sub?: string;
+  id?: string;
+  usuarioId?: string;
+}
+
+interface BackendError {
+  message: string;
+}
+
+// Interface para lidar com a estrutura de ingredientes que vem do BD (relação Many-to-Many)
+interface IngredienteRel {
+  id?: number;
+  ingredienteId?: number;
+  ingrediente?: {
+    id: number;
+  };
 }
 
 // --- MODAL DE EXCLUSÃO ---
@@ -55,7 +85,7 @@ export function POSView() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [showCheckout, setShowCheckout] = useState(false);
   const [finalizando, setFinalizando] = useState(false);
-  const [comprovante, setComprovante] = useState<any>(null);
+  const [comprovante, setComprovante] = useState<ComprovanteData | null>(null);
 
   const [showCadastroModal, setShowCadastroModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -64,7 +94,7 @@ export function POSView() {
 
   const [nomeCliente, setNomeCliente] = useState('');
   const [tipoPedido, setTipoPedido] = useState<'LOCAL' | 'RETIRADA' | 'ENTREGA'>('LOCAL');
-  const [formaPagamento, setFormaPagamento] = useState<'PIX' | 'CARTAO' | 'DINHEIRO'>('PIX');
+  const [formaPagamento, setFormaPagamento] = useState<MetodoPagamento>('PIX');
   const [rua, setRua] = useState('');
   const [numero, setNumero] = useState('');
   const [bairro, setBairro] = useState('');
@@ -75,14 +105,13 @@ export function POSView() {
   const [novaDesc, setNovaDesc] = useState('');
   const [novaImagemUrl, setNovaImagemUrl] = useState('');
   const [imagemBase64, setImagemBase64] = useState<string | null>(null);
-  const [imagemNome, setImagemNome] = useState('');
+  const [, setImagemNome] = useState('')
   const [ingredientesSelecionados, setIngredientesSelecionados] = useState<number[]>([]);
   const [salvando, setSalvando] = useState(false);
 
-  // --- INTEGRAÇÃO COM SALESCONTEXT ---
   const { registrarVenda } = useSales();
 
-  const totalPreco = cart.reduce((acc, i) => acc + (Number(i.produto.preco) * i.quantidade), 0);
+  const totalPreco = cart.reduce((acc, i) => acc + (Number(i.produto.preco || 0) * i.quantidade), 0);
   const totalItens = cart.reduce((acc, i) => acc + i.quantidade, 0);
 
   useEffect(() => {
@@ -92,7 +121,7 @@ export function POSView() {
   const carregarDados = async () => {
     try {
       const [prodRes, ingRes] = await Promise.all([
-        api.get('/produtos'),
+        api.get<Produto[]>('/produtos'),
         api.get('/ingredientes'),
       ]);
       setProducts(prodRes.data);
@@ -118,7 +147,7 @@ export function POSView() {
 
   const handleImageInput = (e: React.ChangeEvent<HTMLInputElement> | React.ClipboardEvent) => {
     let file: File | null = null;
-    if ('files' in e.target && (e.target as HTMLInputElement).files) {
+    if ('target' in e && (e.target as HTMLInputElement).files) {
       file = (e.target as HTMLInputElement).files![0];
     } else if ('clipboardData' in e) {
       const items = (e as React.ClipboardEvent).clipboardData.items;
@@ -131,42 +160,40 @@ export function POSView() {
 
   const previewImagem = imagemBase64 || novaImagemUrl;
 
-  // --- LOGICA DE ATUALIZAÇÃO ---
-  // POSView.tsx
+  const salvarOuAtualizarProduto = async () => {
+    if (!novoNome || !novoPreco) return alert('Preencha os campos obrigatórios!');
 
-const salvarOuAtualizarProduto = async () => {
-  if (!novoNome || !novoPreco) return alert('Preencha os campos obrigatórios!');
+    setSalvando(true);
+    try {
+      const dadosParaEnvio = {
+        nome: novoNome,
+        preco: parseFloat(novoPreco),
+        descricao: novaDesc,
+        estoque: 999,
+        tempoProducao: 15,
+        categoria: "Lanches",
+        imagemUrl: imagemBase64 || novaImagemUrl || null,
+        ingredientes: ingredientesSelecionados.map(id => Number(id))
+      };
 
-  setSalvando(true);
-  try {
-    const dadosParaEnvio = {
-      nome: novoNome,
-      preco: parseFloat(novoPreco), // Garante que é número
-      descricao: novaDesc,
-      estoque: 999, // Valor padrão ou do estado
-      tempoProducao: 15,
-      imagemUrl: imagemBase64 || novaImagemUrl || null,
-      // Garante que enviamos um array de números puros[cite: 12]
-      ingredientes: ingredientesSelecionados.map(id => Number(id))
-    };
+      if (editandoId) {
+        await api.put(`/produtos/${editandoId}`, dadosParaEnvio);
+        alert('Produto atualizado!');
+      } else {
+        await api.post('/produtos', dadosParaEnvio);
+        alert('Produto criado!');
+      }
 
-    if (editandoId) {
-      await api.put(`/produtos/${editandoId}`, dadosParaEnvio);
-      alert('Produto atualizado!');
-    } else {
-      await api.post('/produtos', dadosParaEnvio);
-      alert('Produto criado!');
+      fecharModalCadastro();
+      await carregarDados();
+    } catch (err) {
+      const error = err as AxiosError<BackendError>;
+      console.error("Erro detalhado:", error.response?.data || error.message);
+      alert("Erro ao salvar produto. Verifique o console.");
+    } finally {
+      setSalvando(false);
     }
-
-    fecharModalCadastro();
-    await carregarDados(); // Atualiza a lista na tela
-  } catch (err: any) {
-    console.error("Erro detalhado:", err.response?.data || err.message);
-    alert("Erro ao salvar produto. Verifique o console.");
-  } finally {
-    setSalvando(false);
-  }
-};
+  };
 
   const fecharModalCadastro = () => {
     setShowCadastroModal(false);
@@ -181,34 +208,28 @@ const salvarOuAtualizarProduto = async () => {
   };
 
   const abrirEdicao = (p: Produto) => {
-  // 1. Define o ID como número
-  setEditandoId(Number(p.id));
-  
-  // 2. Preenche os campos básicos
-  setNovoNome(p.nome);
-  setNovoPreco(String(p.preco));
-  setNovaDesc(p.descricao || '');
+    setEditandoId(Number(p.id));
+    setNovoNome(p.nome);
+    setNovoPreco(String(p.preco));
+    setNovaDesc(p.descricao || '');
 
-  // 3. Trata a imagem (se for URL ou Base64)
-  if (p.imagemUrl && !p.imagemUrl.startsWith('data:')) {
-    setNovaImagemUrl(p.imagemUrl);
-    setImagemBase64(null);
-  } else {
-    setImagemBase64(p.imagemUrl || null);
-    setNovaImagemUrl('');
-  }
+    if (p.imagemUrl && !p.imagemUrl.startsWith('data:')) {
+      setNovaImagemUrl(p.imagemUrl);
+      setImagemBase64(null);
+    } else {
+      setImagemBase64(p.imagemUrl || null);
+      setNovaImagemUrl('');
+    }
 
-  // 4. Lógica para capturar IDs de ingredientes de diferentes formatos da API
-  const ings = p.ingredientes ?? [];
-  const ids = ings.map((i: any) => {
-    if (typeof i === 'number') return i;
-    // Tenta pegar o ID de dentro da relação do Prisma[cite: 12]
-    return Number(i.ingredienteId ?? i.id ?? i.ingrediente?.id ?? 0);
-  }).filter((id: number) => id > 0);
+    const ings = (p.ingredientes as IngredienteRel[]) ?? [];
+    const ids = ings.map((i) => {
+      if (typeof i === 'number') return i;
+      return Number(i.ingredienteId ?? i.id ?? i.ingrediente?.id ?? 0);
+    }).filter((id: number) => id > 0);
 
-  setIngredientesSelecionados(ids);
-  setShowCadastroModal(true);
-};
+    setIngredientesSelecionados(ids);
+    setShowCadastroModal(true);
+  };
 
   const abrirDeleteModal = (p: Produto) => {
     setProdutoParaExcluir({ ...p, id: Number(p.id) });
@@ -227,7 +248,6 @@ const salvarOuAtualizarProduto = async () => {
     }
   };
 
-  // --- CARRINHO ---
   const addToCart = (produto: Partial<Produto>) => {
     setCart((prev) => {
       const existing = prev.find((i) => i.produto.id === Number(produto.id));
@@ -257,13 +277,12 @@ const salvarOuAtualizarProduto = async () => {
   const getQtdCarrinho = (id: number) =>
     cart.find((i) => i.produto.id === Number(id))?.quantidade || 0;
 
-  // --- LOGICA DE FECHAMENTO ---
   const getUsuarioIdDoToken = (): string | null => {
     try {
       const token = localStorage.getItem('@ByteToBite:token');
       if (!token) return null;
       const payload = token.split('.')[1];
-      const decoded = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+      const decoded = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/'))) as JWTPayload;
       return decoded.sub ?? decoded.id ?? decoded.usuarioId ?? null;
     } catch {
       return null;
@@ -293,7 +312,7 @@ const salvarOuAtualizarProduto = async () => {
     try {
       let enderecoId: string | null = null;
       if (tipoPedido === 'ENTREGA') {
-        const enderecoRes = await api.post('/enderecos', {
+        const enderecoRes = await api.post<{ id: string }>('/enderecos', {
           usuarioId,
           rua,
           numeroDaCasa: numero,
@@ -303,12 +322,12 @@ const salvarOuAtualizarProduto = async () => {
         enderecoId = enderecoRes.data.id;
       }
 
-      const payload: any = {
+      const payload = {
         nomeCliente,
         usuarioId,
         retirada: tipoPedido === 'RETIRADA' ? 'SIM' : 'NAO',
         precoTotal: Number(totalPreco),
-        status: 'EM_PREPARO',
+        status: 'EM_PREPARO' as StatusPedido,
         pagamento: formaPagamento,
         enderecoId,
         itens: cart.map((i) => ({
@@ -318,9 +337,8 @@ const salvarOuAtualizarProduto = async () => {
         })),
       };
 
-      const response = await api.post('/pedidos', payload);
+      const response = await api.post<{ id: string }>('/pedidos', payload);
 
-      // --- REGISTRA A VENDA NO CONTEXTO COMPARTILHADO ---
       registrarVenda({
         id: response.data.id,
         total: totalPreco,
@@ -330,7 +348,7 @@ const salvarOuAtualizarProduto = async () => {
           produtoId: Number(i.produto.id),
           nome: i.produto.nome ?? '',
           quantidade: i.quantidade,
-          precoDaUnidade: Number(i.produto.preco),
+          precoDaUnidade: Number(i.produto.preco || 0),
           imagemUrl: i.produto.imagemUrl,
         })),
       });
@@ -353,10 +371,10 @@ const salvarOuAtualizarProduto = async () => {
       setBairro('');
       setCidade('');
 
-    } catch (err: any) {
-      const erroBackend = err.response?.data || err.message;
-      console.error('ERRO AO FINALIZAR PEDIDO:', erroBackend);
-      alert(`Erro: ${err.response?.data?.message || 'Falha ao salvar o pedido. Verifique o console.'}`);
+    } catch (err) {
+      const error = err as AxiosError<BackendError>;
+      console.error('ERRO AO FINALIZAR PEDIDO:', error.response?.data || error.message);
+      alert(`Erro: ${error.response?.data?.message || 'Falha ao salvar o pedido.'}`);
     } finally {
       setFinalizando(false);
     }
@@ -471,7 +489,7 @@ const salvarOuAtualizarProduto = async () => {
                         <button onClick={() => removeItemTotal(item.idUnico)} className="text-red-500 material-symbols-outlined text-lg opacity-0 group-hover:opacity-100">cancel</button>
                         <span className="font-bold text-[#2D1B18]">{item.quantidade}x {item.produto.nome}</span>
                       </div>
-                      <span className="font-black text-[#ac2d00]">R$ {(item.quantidade * Number(item.produto.preco)).toFixed(2)}</span>
+                      <span className="font-black text-[#ac2d00]">R$ {(item.quantidade * Number(item.produto.preco || 0)).toFixed(2)}</span>
                     </div>
                   ))}
                   <div className="flex justify-between pt-2 border-t font-black text-lg">
@@ -550,10 +568,10 @@ const salvarOuAtualizarProduto = async () => {
             </div>
             <div className="font-bold">CLIENTE: {comprovante.cliente}</div>
             <div className="space-y-1">
-              {comprovante.itens.map((i: CartItem) => (
+              {comprovante.itens.map((i) => (
                 <div key={i.idUnico} className="flex justify-between">
                   <span>{i.quantidade}x {i.produto.nome}</span>
-                  <span>R$ {(i.quantidade * Number(i.produto.preco)).toFixed(2)}</span>
+                  <span>R$ {(i.quantidade * Number(i.produto.preco || 0)).toFixed(2)}</span>
                 </div>
               ))}
             </div>

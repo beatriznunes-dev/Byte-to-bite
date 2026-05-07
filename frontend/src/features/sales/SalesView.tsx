@@ -2,6 +2,29 @@ import { motion } from 'motion/react';
 import { BarChart, Bar, XAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { useSales } from '../../features/sales/SalesContext';
 
+interface PaymentMethodItemProps {
+  label: string;
+  value: number;
+  total: number;
+  icon: string;
+  color: string;
+  bgColor: string;
+}
+
+interface TopProductItemProps {
+  name: string;
+  count: number;
+  sales: number;
+  img: string;
+}
+
+interface ProdutoAgrupado {
+  nome: string;
+  count: number;
+  sales: number;
+  imagemUrl?: string;
+}
+
 export function SalesView() {
   const { sales } = useSales();
 
@@ -29,7 +52,6 @@ export function SalesView() {
     return { hour: label, sales: total };
   }).filter((h) => h.sales > 0);
 
-  // Garante ao menos placeholder visual quando não há vendas ainda
   const dadosGrafico =
     vendasPorHora.length > 0
       ? vendasPorHora
@@ -41,10 +63,8 @@ export function SalesView() {
   );
 
   // --- PRODUTOS MAIS VENDIDOS ---
-  const produtosMap = new Map<
-    number,
-    { nome: string; count: number; sales: number; imagemUrl?: string }
-  >();
+  const produtosMap = new Map<number, ProdutoAgrupado>();
+
   sales.forEach((s) => {
     s.itens.forEach((item) => {
       const existing = produtosMap.get(item.produtoId);
@@ -61,17 +81,16 @@ export function SalesView() {
       }
     });
   });
+
   const topProdutos = Array.from(produtosMap.values())
     .sort((a, b) => b.count - a.count)
     .slice(0, 3);
 
-  // --- COMPARAÇÃO COM ONTEM (placeholder, sem dados históricos) ---
   const variacaoTexto = sales.length > 0 ? 'AO VIVO' : 'SEM VENDAS HOJE';
 
   return (
     <div className="p-stack-lg space-y-stack-lg animate-in fade-in duration-500">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
-        {/* CARD PRINCIPAL */}
         <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-[#FFCCBC] relative overflow-hidden">
           <div className="relative z-10 flex flex-col justify-between h-full">
             <div className="flex justify-between items-start">
@@ -99,7 +118,6 @@ export function SalesView() {
           <span className="material-symbols-outlined absolute -right-8 -bottom-8 text-[240px] text-on-surface/5 pointer-events-none">restaurant</span>
         </div>
 
-        {/* MÉTODOS DE PAGAMENTO */}
         <div className="bg-white p-6 rounded-xl shadow-sm border border-[#FFCCBC]">
           <h3 className="text-xl font-black text-on-surface mb-6 uppercase tracking-wider">Métodos de Pagamento</h3>
           <div className="space-y-6">
@@ -111,7 +129,6 @@ export function SalesView() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
-        {/* GRÁFICO DE VENDAS POR HORA */}
         <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-[#FFCCBC]">
           <div className="flex justify-between items-center mb-8">
             <h3 className="text-xl font-black text-on-surface uppercase tracking-wider">Vendas por Hora</h3>
@@ -155,7 +172,6 @@ export function SalesView() {
           </div>
         </div>
 
-        {/* TOP PRODUTOS */}
         <div className="bg-white p-6 rounded-xl shadow-sm border border-[#FFCCBC]">
           <h3 className="text-xl font-black text-on-surface mb-6 uppercase tracking-wider">Produtos + Vendidos</h3>
           <div className="space-y-4">
@@ -197,7 +213,7 @@ export function SalesView() {
   );
 }
 
-function PaymentMethodItem({ label, value, total, icon, color, bgColor }: any) {
+function PaymentMethodItem({ label, value, total, icon, color, bgColor }: PaymentMethodItemProps) {
   const percentage = total > 0 ? (value / total) * 100 : 0;
   return (
     <div className="flex items-center gap-4">
@@ -223,7 +239,7 @@ function PaymentMethodItem({ label, value, total, icon, color, bgColor }: any) {
   );
 }
 
-function TopProductItem({ name, count, sales, img }: any) {
+function TopProductItem({ name, count, sales, img }: TopProductItemProps) {
   return (
     <div className="flex items-center justify-between p-3 hover:bg-on-surface/5 rounded-xl transition-all cursor-pointer">
       <div className="flex items-center gap-4">

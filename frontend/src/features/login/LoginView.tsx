@@ -1,8 +1,14 @@
 import { useState } from 'react';
+import { AxiosError } from 'axios';
 import { api } from '../../services/api';
 
 interface LoginProps {
   onLoginSuccess: () => void;
+}
+
+// Interface para tipar o retorno da API de Login
+interface LoginResponse {
+  token: string;
 }
 
 type ViewMode = 'login' | 'register';
@@ -27,14 +33,18 @@ export function LoginView({ onLoginSuccess }: LoginProps) {
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     try {
-      const response = await api.post('/auth/login', { 
+      // Tipagem real na chamada do post
+      const response = await api.post<LoginResponse>('/auth/login', { 
         email, 
         senha: password 
       });
+      
       const { token } = response.data;
       localStorage.setItem('@ByteToBite:token', token);
       onLoginSuccess();
     } catch (error) {
+      const err = error as AxiosError;
+      console.error(err.message);
       alert('Falha no login. Verifique suas credenciais.');
     }
   }
@@ -56,6 +66,8 @@ export function LoginView({ onLoginSuccess }: LoginProps) {
       alert('Cadastro realizado com sucesso!');
       setMode('login');
     } catch (error) {
+      const err = error as AxiosError;
+      console.error(err.message);
       alert('Erro ao realizar cadastro.');
     }
   }
@@ -110,7 +122,6 @@ export function LoginView({ onLoginSuccess }: LoginProps) {
             </div>
           )}
 
-          {/* Campo Senha */}
           <div className="relative">
             <label className="block text-xs font-bold uppercase text-gray-400 mb-1 ml-1">Senha</label>
             <input 
@@ -131,7 +142,6 @@ export function LoginView({ onLoginSuccess }: LoginProps) {
             </button>
           </div>
 
-          {/* Campo Repetir Senha (com Olho também) */}
           {mode === 'register' && (
             <div className="relative animate-in fade-in slide-in-from-top-2 duration-300">
               <label className="block text-xs font-bold uppercase text-gray-400 mb-1 ml-1">Repetir Senha</label>

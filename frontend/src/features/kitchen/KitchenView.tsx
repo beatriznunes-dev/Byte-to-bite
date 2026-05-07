@@ -1,21 +1,41 @@
 import { motion } from 'motion/react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { api } from '../../services/api';
 
-// -------------------------------------------------------------------
-// Fluxo visual de status:
-//   AGUARDANDO (cinza)   → clica "Iniciar Preparo"   → EM_PREPARO (amarelo)
-//   EM_PREPARO (amarelo) → > 15 min                  → ATRASADO   (vermelho)
-//   EM_PREPARO/ATRASADO  → clica "Marcar como Pronto" → PRONTO    (verde)
-//   PRONTO (verde)       → clica "Confirmar Entrega"  → ENTREGUE  (sai da tela)
-// -------------------------------------------------------------------
+interface ItemPedido {
+  id: string | number;
+  produto?: {
+    nome: string;
+  };
+  nome?: string;
+  name?: string;
+  precoDaUnidade: number;
+  quantidade: number;
+  observacao?: string;
+}
+
+interface Pedido {
+  id: string;
+  status: 'EM_PREPARO' | 'A_CAMINHO' | 'ENTREGUE' | 'CANCELADO';
+  nomeCliente?: string;
+  createdAt: string;
+  retirada?: string;
+  pagamento?: string;
+  precoTotal: number;
+  itens?: ItemPedido[];
+  item?: ItemPedido[]; // Suporte para ambas variações da API
+}
 
 type StatusVisual = 'AGUARDANDO' | 'EM_PREPARO' | 'ATRASADO' | 'PRONTO';
 
-const STATUS_CONFIG: Record<
-  StatusVisual,
-  { color: string; bg: string; label: string; action: string }
-> = {
+interface StatusConfigValue {
+  color: string;
+  bg: string;
+  label: string;
+  action: string;
+}
+
+const STATUS_CONFIG: Record<StatusVisual, StatusConfigValue> = {
   AGUARDANDO: {
     color: '#78909C',
     bg: '#78909C22',
@@ -47,7 +67,6 @@ const STATUS_CONFIG: Record<
 // -------------------------------------------------------------------
 const LS_INICIADOS = '@KDS:iniciados';
 const LS_PRONTOS = '@KDS:prontos';
-// Persistimos também o timestamp em que cada pedido foi iniciado
 const LS_INICIO_TS = '@KDS:inicioTs';
 
 function loadSet(key: string): Set<string> {
@@ -80,9 +99,6 @@ function saveTimestamps(ts: Record<string, number>) {
   } catch {}
 }
 
-// -------------------------------------------------------------------
-// Hook: cronômetro tick a cada segundo
-// -------------------------------------------------------------------
 function useNow(intervalMs = 1000) {
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
@@ -92,9 +108,6 @@ function useNow(intervalMs = 1000) {
   return now;
 }
 
-// -------------------------------------------------------------------
-// Formata ms → "MM:SS" ou "HH:MM:SS"
-// -------------------------------------------------------------------
 function formatElapsed(ms: number): string {
   const totalSec = Math.floor(ms / 1000);
   const h = Math.floor(totalSec / 3600);
@@ -106,23 +119,13 @@ function formatElapsed(ms: number): string {
   return `${mm}:${ss}`;
 }
 
-// -------------------------------------------------------------------
-// Componente principal
-// -------------------------------------------------------------------
 export function KitchenView() {
-  const [orders, setOrders] = useState<any[]>([]);
+  const [orders, setOrders] = useState<Pedido[]>([]);
   const now = useNow(1000);
 
-  const [iniciados, setIniciadosState] = useState<Set<string>>(() =>
-    loadSet(LS_INICIADOS)
-  );
-  const [prontos, setProntosState] = useState<Set<string>>(() =>
-    loadSet(LS_PRONTOS)
-  );
-  // Mapa de id → timestamp (ms) de quando o preparo foi iniciado
-  const [inicioTs, setInicioTsState] = useState<Record<string, number>>(() =>
-    loadTimestamps()
-  );
+  const [iniciados, setIniciadosState] = useState<Set<string>>(() => loadSet(LS_INICIADOS));
+  const [prontos, setProntosState] = useState<Set<string>>(() => loadSet(LS_PRONTOS));
+  const [inicioTs, setInicioTsState] = useState<Record<string, number>>(() => loadTimestamps());
 
   const setIniciados = (fn: (prev: Set<string>) => Set<string>) => {
     setIniciadosState(prev => {
@@ -150,13 +153,13 @@ export function KitchenView() {
 
   const fetchOrders = async () => {
     try {
-      const response = await api.get('/pedidos');
+      const response = await api.get<Pedido[]>('/pedidos');
       const ativos = response.data.filter(
-        (p: any) => p.status === 'EM_PREPARO' || p.status === 'A_CAMINHO'
+        (p) => p.status === 'EM_PREPARO' || p.status === 'A_CAMINHO'
       );
       setOrders(ativos);
 
-      const idsAtivos = new Set<string>(ativos.map((p: any) => p.id));
+      const idsAtivos = new Set<string>(ativos.map((p) => p.id));
       setIniciados(prev => new Set([...prev].filter(id => idsAtivos.has(id))));
       setProntos(prev => new Set([...prev].filter(id => idsAtivos.has(id))));
       setInicioTs(prev => {
@@ -175,7 +178,7 @@ export function KitchenView() {
     return () => clearInterval(interval);
   }, []);
 
-  const resolveStatusVisual = (order: any): StatusVisual => {
+  const resolveStatusVisual = (order: Pedido): StatusVisual => {
     if (prontos.has(order.id) || order.status === 'A_CAMINHO') return 'PRONTO';
     if (!iniciados.has(order.id)) return 'AGUARDANDO';
 
@@ -185,12 +188,11 @@ export function KitchenView() {
     return 'EM_PREPARO';
   };
 
-  // Retorna o timestamp de início do cronômetro para um pedido
-  const getStartTs = (order: any): number => {
+  const getStartTs = (order: Pedido): number => {
     return inicioTs[order.id] ?? new Date(order.createdAt).getTime();
   };
 
-  const handleAction = async (order: any) => {
+  const handleAction = async (order: Pedido) => {
     const visual = resolveStatusVisual(order);
 
     try {
@@ -236,9 +238,8 @@ export function KitchenView() {
           </p>
         </div>
 
-        {/* Legenda de status */}
         <div className="hidden md:flex items-center gap-5">
-          {(Object.entries(STATUS_CONFIG) as [StatusVisual, (typeof STATUS_CONFIG)[StatusVisual]][]).map(
+          {(Object.entries(STATUS_CONFIG) as [StatusVisual, StatusConfigValue][]).map(
             ([key, cfg]) => (
               <div key={key} className="flex items-center gap-1.5">
                 <span
@@ -271,9 +272,6 @@ export function KitchenView() {
   );
 }
 
-// -------------------------------------------------------------------
-// Helpers
-// -------------------------------------------------------------------
 function labelRetirada(retirada: string | undefined): string {
   if (!retirada) return '';
   const r = retirada.toUpperCase();
@@ -290,9 +288,15 @@ function iconRetirada(retirada: string | undefined): string {
   return '🪑';
 }
 
-// -------------------------------------------------------------------
-// Card individual
-// -------------------------------------------------------------------
+interface OrderCardProps {
+  order: Pedido;
+  index: number;
+  statusVisual: StatusVisual;
+  startTs: number;
+  now: number;
+  onAction: () => void;
+}
+
 function OrderCard({
   order,
   index,
@@ -300,22 +304,14 @@ function OrderCard({
   startTs,
   now,
   onAction,
-}: {
-  order: any;
-  index: number;
-  statusVisual: StatusVisual;
-  startTs: number;
-  now: number;
-  onAction: () => void;
-}) {
+}: OrderCardProps) {
   const config = STATUS_CONFIG[statusVisual];
-  const listaItens: any[] = order.itens ?? order.item ?? [];
+  const listaItens: ItemPedido[] = order.itens ?? order.item ?? [];
 
   const elapsedMs = now - startTs;
   const elapsedFormatted = formatElapsed(elapsedMs);
   const elapsedMinutes = Math.floor(elapsedMs / 60000);
 
-  // Cor do cronômetro: vermelho se atrasado, amarelo se perto, cinza se aguardando
   const timerColor =
     statusVisual === 'ATRASADO'
       ? '#E53935'
@@ -335,12 +331,9 @@ function OrderCard({
       transition={{ delay: index * 0.05 }}
       className="bg-white rounded-[32px] overflow-hidden shadow-sm border border-orange-100 flex flex-col"
     >
-      {/* Barra colorida do status */}
       <div className="h-3" style={{ backgroundColor: config.color }} />
 
       <div className="p-6 flex flex-col flex-1 gap-0">
-
-        {/* ── Cabeçalho: nome do cliente + cronômetro ── */}
         <div className="flex justify-between items-start mb-1">
           <div className="flex-1 min-w-0 pr-2">
             <span
@@ -354,7 +347,6 @@ function OrderCard({
             </h4>
           </div>
 
-          {/* Cronômetro */}
           <div className="flex flex-col items-end shrink-0">
             <span className="text-[9px] font-black uppercase text-gray-300 tracking-wider">
               na fila
@@ -368,7 +360,6 @@ function OrderCard({
           </div>
         </div>
 
-        {/* Horário de criação + badges */}
         <div className="flex flex-wrap items-center gap-2 mb-3">
           <span className="text-[10px] font-bold text-gray-400 uppercase">
             {new Date(order.createdAt).toLocaleTimeString([], {
@@ -393,7 +384,6 @@ function OrderCard({
           )}
         </div>
 
-        {/* ── Lista de lanches ── */}
         <div
           className="flex-1 overflow-y-auto border-t border-b border-gray-100 py-3 my-2"
           style={{ maxHeight: '180px' }}
@@ -404,7 +394,7 @@ function OrderCard({
             </p>
           ) : (
             <ul className="space-y-2">
-              {listaItens.map((it: any) => {
+              {listaItens.map((it) => {
                 const nomeLanche =
                   it.produto?.nome ||
                   it.nome ||
@@ -414,7 +404,6 @@ function OrderCard({
 
                 return (
                   <li key={it.id} className="flex items-start gap-2">
-                    {/* Quantidade em destaque */}
                     <span
                       className="text-[11px] font-black shrink-0 w-7 h-7 rounded-xl flex items-center justify-center text-white mt-0.5"
                       style={{ backgroundColor: config.color }}
@@ -422,12 +411,10 @@ function OrderCard({
                       {it.quantidade ?? 1}
                     </span>
 
-                    {/* Nome do lanche com destaque */}
                     <div className="flex flex-col flex-1 min-w-0">
                       <span className="text-sm font-black text-[#2D1B18] leading-snug uppercase truncate">
                         {nomeLanche}
                       </span>
-                      {/* Observações se existirem */}
                       {it.observacao && (
                         <span className="text-[9px] font-bold text-gray-400 leading-tight truncate">
                           {it.observacao}
@@ -445,7 +432,6 @@ function OrderCard({
           )}
         </div>
 
-        {/* ── Total ── */}
         <div className="flex justify-between items-center py-2">
           <span className="text-[10px] font-black uppercase text-gray-300">
             Total
@@ -455,7 +441,6 @@ function OrderCard({
           </span>
         </div>
 
-        {/* ── Botão de ação ── */}
         <button
           onClick={onAction}
           style={{ backgroundColor: config.color }}

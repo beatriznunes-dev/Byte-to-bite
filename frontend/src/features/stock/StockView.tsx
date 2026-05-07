@@ -1,7 +1,13 @@
 import { useEffect, useState } from 'react';
+import { AxiosError } from 'axios';
 import { api } from '../../services/api'; 
 import type { Ingrediente } from '../../types/types';
 import { getIconByInsumoName } from '../../utils/iconHelper';
+
+// Interface para estruturar a resposta da API caso ela venha encapsulada
+interface StockResponse {
+  ingredientes?: Ingrediente[];
+}
 
 export function StockView() {
   const [items, setItems] = useState<Ingrediente[]>([]);
@@ -18,9 +24,17 @@ export function StockView() {
   async function loadStock() {
     try {
       setLoading(true);
-      const response = await api.get('/ingredientes'); 
-      const data = Array.isArray(response.data) ? response.data : response.data.ingredientes;
-      setItems(data || []);
+      // Tipando a resposta do get
+      const response = await api.get<Ingrediente[] | StockResponse>('/ingredientes'); 
+      
+      let data: Ingrediente[] = [];
+      if (Array.isArray(response.data)) {
+        data = response.data;
+      } else if (response.data.ingredientes) {
+        data = response.data.ingredientes;
+      }
+      
+      setItems(data);
     } catch (error) {
       console.error("Erro ao carregar estoque:", error);
     } finally {
@@ -53,54 +67,54 @@ export function StockView() {
     setActiveMenuId(null);
   }
 
-  // Substitua no seu StockView.tsx
-async function handleSaveInsumo(e: React.FormEvent) {
-  e.preventDefault();
-  try {
-    const token = localStorage.getItem('@ByteToBite:token'); // Pega o token salvo
-    
-    const payload = { 
-      nome: novoNome, 
-      estoque: Number(novaQtd) 
-    };
+  async function handleSaveInsumo(e: React.FormEvent) {
+    e.preventDefault();
+    try {
+      const token = localStorage.getItem('@ByteToBite:token');
+      
+      const payload = { 
+        nome: novoNome, 
+        estoque: Number(novaQtd) 
+      };
 
-    const config = {
-      headers: { Authorization: `Bearer ${token}` } // Adiciona o crachá de ADMIN
-    };
+      const config = {
+        headers: { Authorization: `Bearer ${token}` }
+      };
 
-    if (editingId) {
-      await api.put(`/ingredientes/${editingId}`, payload, config);
-    } else {
-      await api.post('/ingredientes', payload, config);
-    }
-    
-    setIsModalOpen(false);
-    loadStock(); 
-  } catch (error: any) {
-    if (error.response?.status === 403) {
-      alert("Acesso negado: Você precisa ser ADMIN para alterar o estoque.");
-    } else {
-      alert("Erro na operação.");
+      if (editingId) {
+        await api.put(`/ingredientes/${editingId}`, payload, config);
+      } else {
+        await api.post('/ingredientes', payload, config);
+      }
+      
+      setIsModalOpen(false);
+      loadStock(); 
+    } catch (error) {
+      const err = error as AxiosError;
+      if (err.response?.status === 403) {
+        alert("Acesso negado: Você precisa ser ADMIN para alterar o estoque.");
+      } else {
+        alert("Erro na operação.");
+      }
     }
   }
-}
 
-async function confirmDelete() {
-  if (!itemToDelete) return;
-  try {
-    const token = localStorage.getItem('@ByteToBite:token');
-    
-    await api.delete(`/ingredientes/${itemToDelete.id}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+  async function confirmDelete() {
+    if (!itemToDelete) return;
+    try {
+      const token = localStorage.getItem('@ByteToBite:token');
+      
+      await api.delete(`/ingredientes/${itemToDelete.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
 
-    setIsDeleteModalOpen(false);
-    setItemToDelete(null);
-    loadStock();
-  } catch {
-    alert("Erro ao excluir insumo.");
+      setIsDeleteModalOpen(false);
+      setItemToDelete(null);
+      loadStock();
+    } catch {
+      alert("Erro ao excluir insumo.");
+    }
   }
-}
 
   const totalItens = items.length;
   const estoqueBaixo = items.filter(item => (item.estoque || 0) < 5).length;
@@ -252,45 +266,41 @@ async function confirmDelete() {
       )}
 
       {/* MODAL DE CONFIRMAÇÃO DE EXCLUSÃO */}
-{isDeleteModalOpen && (
-  <div className="fixed inset-0 bg-slate-900/60 flex items-center justify-center z-100 backdrop-blur-sm p-4">
-    <div className="bg-white p-10 rounded-4xl shadow-2xl w-full max-w-md border border-slate-100 animate-in zoom-in-95 duration-200">
-      
-      {/* ÍCONE  Usando 'delete' */}
-      <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center mb-6">
-        <span className="material-symbols-outlined text-red-600 text-4xl" style={{ fontVariationSettings: "'FILL' 0, 'wght' 700" }}>
-          delete
-        </span>
-      </div>
+      {isDeleteModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/60 flex items-center justify-center z-50 backdrop-blur-sm p-4">
+          <div className="bg-white p-10 rounded-4xl shadow-2xl w-full max-w-md border border-slate-100 animate-in zoom-in-95 duration-200">
+            <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center mb-6">
+              <span className="material-symbols-outlined text-red-600 text-4xl" style={{ fontVariationSettings: "'FILL' 0, 'wght' 700" }}>
+                delete
+              </span>
+            </div>
 
-      <h2 className="text-3xl font-black text-slate-900 mb-3 tracking-tight">
-        Confirmar Exclusão
-      </h2>
-      
-      <p className="text-slate-600 font-medium leading-relaxed mb-10">
-        Você tem certeza que deseja excluir <span className="font-black text-slate-900 italic">"{itemToDelete?.nome}"</span>? Esta ação não pode ser desfeita.
-      </p>
+            <h2 className="text-3xl font-black text-slate-900 mb-3 tracking-tight">
+              Confirmar Exclusão
+            </h2>
+            
+            <p className="text-slate-600 font-medium leading-relaxed mb-10">
+              Você tem certeza que deseja excluir <span className="font-black text-slate-900 italic">"{itemToDelete?.nome}"</span>? Esta ação não pode ser desfeita.
+            </p>
 
-      <div className="flex flex-col sm:flex-row gap-4">
-        {/* BOTÃO MANTER */}
-        <button 
-          onClick={() => setIsDeleteModalOpen(false)}
-          className="flex-1 px-6 py-4 font-black text-slate-700 bg-slate-100 hover:bg-slate-200 border-2 border-slate-200 rounded-2xl transition-all order-2 sm:order-1 uppercase text-xs tracking-widest"
-        >
-          Manter item
-        </button>
-        
-        {/* BOTÃO EXCLUIR */}
-        <button 
-          onClick={confirmDelete}
-          className="flex-1 bg-red-600 text-white px-6 py-4 rounded-2xl font-black uppercase tracking-widest hover:bg-red-700 active:scale-95 transition-all shadow-lg shadow-red-200 order-1 sm:order-2 text-xs"
-        >
-          Sim, Excluir
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+            <div className="flex flex-col sm:flex-row gap-4">
+              <button 
+                onClick={() => setIsDeleteModalOpen(false)}
+                className="flex-1 px-6 py-4 font-black text-slate-700 bg-slate-100 hover:bg-slate-200 border-2 border-slate-200 rounded-2xl transition-all order-2 sm:order-1 uppercase text-xs tracking-widest"
+              >
+                Manter item
+              </button>
+              
+              <button 
+                onClick={confirmDelete}
+                className="flex-1 bg-red-600 text-white px-6 py-4 rounded-2xl font-black uppercase tracking-widest hover:bg-red-700 active:scale-95 transition-all shadow-lg shadow-red-200 order-1 sm:order-2 text-xs"
+              >
+                Sim, Excluir
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -315,7 +325,7 @@ function StatCard({ label, value, icon, color, isError }: {
   );
 }
 
-function StatusBadge({ status }: { status: string }) {
+function StatusBadge({ status }: { status: 'baixo' | 'normal' | string }) {
   const config = {
     baixo: { bg: 'bg-red-100', text: 'text-red-700', icon: 'warning', label: 'Estoque Baixo' },
     normal: { bg: 'bg-green-100', text: 'text-green-800', icon: 'check_circle', label: 'Normal' },
