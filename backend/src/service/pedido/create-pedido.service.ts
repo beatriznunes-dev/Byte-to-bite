@@ -9,6 +9,7 @@ interface CreatePedidoDTO {
   enderecoId?: string;
   nomeCliente: string;
   retirada: string;
+  precoTotal: number
   pagamento?: string;
   itens: { produtoId: number; quantidade: number }[];
 }
@@ -68,7 +69,7 @@ export class CreatePedidoService {
       enderecoId: data.enderecoId ?? undefined,
       nomeCliente: data.nomeCliente,
       retirada: data.retirada,
-      pagamento: data.pagamento,
+      pagamento: data.pagamento as MetodoPagamento,
       precoTotal,
       itens: itensComPreco,
     });

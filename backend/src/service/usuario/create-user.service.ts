@@ -7,6 +7,7 @@ interface CreateUsuarioDTO {
   email: string;
   senha: string;
   telefone?: string;
+  role?: string
 }
 
 export class CreateUsuarioService {
