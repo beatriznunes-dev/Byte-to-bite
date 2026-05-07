@@ -1,9 +1,15 @@
-import axios, { type AxiosInstance, type InternalAxiosRequestConfig, type AxiosResponse } from 'axios';
+import axios, { 
+  type AxiosInstance, 
+  type InternalAxiosRequestConfig, 
+  type AxiosResponse 
+} from 'axios';
 
 /**
- * Configuração da Base URL:
+ * URL da API: 
+ * Em produção (Vercel), usará a variável VITE_API_URL.
+ * Em desenvolvimento local, usará o localhost:3333.
  */
-const API_URL = 'http://localhost:3333'; 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3333';
 
 export const api: AxiosInstance = axios.create({
   baseURL: API_URL,
@@ -14,28 +20,31 @@ export const api: AxiosInstance = axios.create({
 
 /**
  * INTERCEPTOR DE REQUISIÇÃO
- * Este código intercepta cada chamada à API e verifica se existe um token no localStorage.
+ * Adiciona o token de autenticação automaticamente.
  */
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = localStorage.getItem('@ByteToBite:token');
+    
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
     return config;
   },
-  (error) => Promise.reject(error)
+  (error: unknown) => Promise.reject(error)
 );
 
 /**
  * INTERCEPTOR DE RESPOSTA
- * Caso o token expire ou seja inválido (Erro 401), podemos deslogar o usuário automaticamente.
+ * Gerencia erros globais, como token expirado (401).
  */
 api.interceptors.response.use(
   (response: AxiosResponse) => response,
-  (error) => {
+  (error: { response?: { status: number } }) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('@ByteToBite:token');
+      // Opcional: window.location.href = '/login';
     }
     return Promise.reject(error);
   }

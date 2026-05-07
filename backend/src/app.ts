@@ -17,17 +17,25 @@ const app = Fastify({
   },
 });
 
+// Configuração corrigida do CORS para produção e desenvolvimento
 await app.register(cors, {
-  origin: process.env.CORS_ORIGIN ?? "*",
+  origin: [
+    "http://localhost:5173", 
+    "https://byte-to-bite.vercel.app"
+  ],
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
 });
 
 app.get("/", async (_request, reply) => {
-  return reply.send({ message: "API funcionando", timestamp: new Date().toISOString() });
+  return reply.send({ 
+    message: "API funcionando", 
+    timestamp: new Date().toISOString() 
+  });
 });
 
+// Registro das rotas
 await app.register(authRoutes);
 await app.register(usuarioRoutes);
 await app.register(enderecoRoutes);
